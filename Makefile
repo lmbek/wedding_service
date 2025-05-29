@@ -10,9 +10,8 @@ GOARCH=amd64
 APP_NAME=$(WEDDING_SERVICE_HOSTNAME)
 BUILD_DIR=./docker-volumes/main-service-files
 
-# Use the command Make to fully rerun everything fast
-.PHONY: all
 
+# Default: clean, build, and run containers as daemon
 all: stop-docker rm-executable build-go run-as-daemon
 
 stop-docker:
@@ -40,4 +39,12 @@ run-as-daemon:
 	docker-compose up -d
 	@echo
 
+test:
+	@echo "Running all tests..."
+	go test ./...
+	@echo
 
+bench:
+	@echo "Running benchmarks..."
+	go test -bench=.
+	@echo
