@@ -23,7 +23,7 @@ rm-executable:
 
 build-go:
 	@echo "Building $(APP_NAME) for $(GOOS)/$(GOARCH)..."
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
 build-docker:
