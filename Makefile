@@ -11,6 +11,11 @@ BUILD_DIR=./docker-volumes/main-service-files
 # Default: clean, build, and run containers as daemon
 all: stop-docker rm-executable build-go run-as-daemon
 
+go-generate:
+	@echo "Running go generate..."
+	go generate ./...
+	@echo
+
 stop-docker:
 	@echo "Stopping Docker containers..."
 	docker-compose down
