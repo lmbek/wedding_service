@@ -12,6 +12,7 @@ This project handles:
 
 ## Installation
 
+First install Go and Docker how you want them (preferably as CLI)
 You can run the service with Go or Docker. Here's how:
 
 ### Prerequisites
@@ -22,40 +23,46 @@ You can run the service with Go or Docker. Here's how:
 
 ---
 
-## Running Locally (Go)
+## Running Locally
 
 ### Run tests
 
-```bash
-go test ./...
-```
+Run `make test` to execute all tests (`go test ./...`).
 
-### Run go
+Please note that testing only involves testing the go service (without integration to sql etc.)
 
-```bash
-go run .
-```
+### Run benchmarks
 
-### Build go
+Run `make bench` to execute benchmarks (`go test -bench=.`).
 
-```bash
-go build .
-```
+Please note that benching only involves testing the go service (without integration to sql etc.)
 
-### Build docker container
-```bash
-docker-compose up --build
-```
+### Build and Run
 
-### Start docker container
-```bash
-docker-compose up -d
-```
+Use the Makefile targets to handle everything smoothly:
 
-### Stop docker container
-```bash
-docker-compose down
-```
+- To build, clean, and start your service and Docker containers as daemons, simply run:
+
+  `make` or `make all`
+
+### Docker
+
+If you want to run Docker commands separately, you can also use:
+
+- `make build-docker` to build and start Docker containers in the foreground
+
+- `make run-as-daemon` to start Docker containers as daemons
+
+- `make stop-docker` to stop all Docker containers
+
+### Go build
+
+If you want to build or run go without docker use
+- `make build-go`  builds go with go build
+
+- `make rm-executable` removes the binary that was build
+
+Please note that the name of the binary is managed from the .env file
 
 ---
 
