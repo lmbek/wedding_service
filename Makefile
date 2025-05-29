@@ -27,7 +27,7 @@ rm-executable:
 	@echo
 
 go-build:
-	@echo "Building $(APP_NAME) for $(GOOS)/$(GOARCH)..."
+	@echo "Building $(APP_NAME) for $(DOCKER_GOOS)/$(DOCKER_GOARCH)..."
 	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
