@@ -23,6 +23,19 @@ You can run the service with Go or Docker. Here's how:
 
 ---
 
+## Before running
+First run
+```bash
+    go generate ./...
+```
+
+Please be aware:
+This will generate the localhost certificates. (as this is the only go generate use in this project).
+
+I have a script to put it into the windows certificate store automatically if you need it. (message me)
+
+If you use windows then add it to cert store manually, if linux then put it into that cert store
+
 ## Running Locally
 
 ### Run tests
