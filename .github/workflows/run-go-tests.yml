@@ -23,16 +23,14 @@ jobs:
             - name: Download dependencies
               run: go mod tidy
 
-            - name: Run go generate # we need to generate localhost certificates
-              run: go generate ./...
+            - name: Run go generate using Makefile # we need to generate localhost certificates
+              run: make go-generate
 
-            - name: Run tests
-              run: go test -count=1 -v ./...
+            - name: Run tests using Makefile
+              run: make test
 
             - name: Run tests with coverage
-              run: |
-                go test -v -coverprofile=coverage.out ./...
-                go tool cover -func=coverage.out
+              run: make test-coverage
 
             -   name: Upload coverage report
                 uses: actions/upload-artifact@v4
@@ -41,7 +39,7 @@ jobs:
                     path: coverage.out
 
             -   name: Run benchmarks
-                run: go test -bench . -benchmem ./...
+                run: make bench
 
     build:
         name: Run Go Build
@@ -57,8 +55,8 @@ jobs:
               with:
                   go-version: '1.24.2'
 
-            - name: Build application
-              run: go build -o app
+            - name: Build application using Makefile
+              run: make go-build
 
 #      - name: Run application
 #        run: |
