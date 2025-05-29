@@ -27,7 +27,7 @@ You can run the service with Go or Docker. Here's how:
 ## Before running
 First run
 ```bash
-    go generate ./...
+    make go-generate
 ```
 
 Please be aware:
@@ -63,16 +63,16 @@ Use the Makefile targets to handle everything smoothly:
 
 If you want to run Docker commands separately, you can also use:
 
-- `make build-docker` to build and start Docker containers in the foreground
+- `make docker-build` to build and start Docker containers in the foreground
 
 - `make run-as-daemon` to start Docker containers as daemons
 
-- `make stop-docker` to stop all Docker containers
+- `make docker-stop` to stop all Docker containers
 
 ### Go build
 
 If you want to build or run go without docker use
-- `make build-go`  builds go with go build
+- `make go-build`  builds go with go build
 
 - `make rm-executable` removes the binary that was build
 
@@ -97,7 +97,7 @@ Please note that the name of the binary is managed from the .env file
 
 **1. Build and Save the Docker Image**
 ```bash
-    docker-compose up --build
+    make docker-build
     docker save wedding_service | gzip > wedding_service.tar.gz
 ```
 **2. Transfer to Remote Server**
