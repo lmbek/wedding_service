@@ -1,1 +1,1 @@
-module wedding_webserver
+module wedding_service
