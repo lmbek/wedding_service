@@ -4,9 +4,6 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
-GOOS=linux
-GOARCH=amd64
-
 APP_NAME=$(WEDDING_SERVICE_HOSTNAME)
 BUILD_DIR=./docker-volumes/main-service-files
 
@@ -26,7 +23,7 @@ rm-executable:
 
 build-go:
 	@echo "Building $(APP_NAME) for $(GOOS)/$(GOARCH)..."
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
 build-docker:
@@ -40,11 +37,26 @@ run-as-daemon:
 	@echo
 
 test:
-	@echo "Running all tests..."
+	@echo "Running all tests for $(TEST_GOOS)/$(TEST_GOARCH)..."
+	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
 	go test ./...
 	@echo
 
+test-coverage:
+	@echo "Running tests with coverage for $(TEST_GOOS)/$(TEST_GOARCH)..."
+	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+	@echo "To view HTML coverage report, run: go tool cover -html=coverage.out"
+	@echo
+
+test-coverage-html: test-coverage
+	@echo "Viewing test coverage as html for $(TEST_GOOS)/$(TEST_GOARCH)..."
+	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
+	go tool cover -html=coverage.out
+
 bench:
-	@echo "Running benchmarks..."
+	@echo "Running benchmarks for $(TEST_GOOS)/$(TEST_GOARCH)..."
+	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
 	go test -bench=.
 	@echo
