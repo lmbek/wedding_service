@@ -3,5 +3,5 @@
 .vscode
 
 .env
-
 docker-volumes
+coverage.out
