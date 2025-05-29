@@ -44,7 +44,7 @@ run-as-daemon:
 test:
 	@echo "Running all tests for $(TEST_GOOS)/$(TEST_GOARCH)..."
 	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
-	go test ./...
+	go test -v ./...
 	@echo
 
 test-coverage:
