@@ -104,7 +104,12 @@ func TestUseACME(t *testing.T) {
 }
 
 func TestUseLOCALHOST(t *testing.T) {
-	tlsCert, err := UseLOCALHOST()
+	cert, key, err := getLocalhostCertAndKey("localhost_wedding_service.crt", "localhost_wedding_service.key")
+	if err != nil {
+		t.Errorf("Could not get cert and/or key: %v \n", err)
+	}
+
+	tlsCert, err := UseLOCALHOST(cert, key)
 	if err != nil {
 		t.Errorf("Got err: %v", err)
 	}
@@ -113,12 +118,40 @@ func TestUseLOCALHOST(t *testing.T) {
 		t.Errorf("tlsCert should not be nil")
 	}
 
-	t.Run("failure", func(t *testing.T) {
-		embeddedCert = []byte("invalid")
-		embeddedKey = []byte("invalid")
-		_, err := UseLOCALHOST()
+	t.Run("test_invalid_paths", func(t *testing.T) {
+		cert, key, err := getLocalhostCertAndKey("invalid", "invalid")
+
+		_, err = UseLOCALHOST(cert, key)
 		if err == nil {
 			t.Errorf("expected error due to invalid certificate")
 		}
 	})
+}
+
+func Test_getLocalhostCertAndKeys(t *testing.T) {
+	cert, key, err := getLocalhostCertAndKey("localhost_wedding_service.crt", "localhost_wedding_service.key")
+	if err != nil {
+		t.Errorf("could not get localhost cert and keys: %v \n", err)
+	}
+
+	if cert == nil {
+		t.Errorf("embeddedCert should not be nil \n")
+	}
+
+	if key == nil {
+		t.Errorf("embeddedKey should not be nil \n")
+	}
+
+	t.Run("test_invalid_paths", func(t *testing.T) {
+		_, _, err = getLocalhostCertAndKey("invalid_path", "localhost_wedding_service.key")
+		if err == nil {
+			t.Errorf("should not get error \n")
+		}
+
+		_, _, err = getLocalhostCertAndKey("localhost_wedding_service.crt", "invalid_path")
+		if err == nil {
+			t.Errorf("should not get error \n")
+		}
+	})
+
 }

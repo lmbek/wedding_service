@@ -1,3 +1,12 @@
+// READ THIS FIRST:
+// create the certificate and key files for localhost first!
+// You need to generate self-signed certificates
+// by running go generate
+
+//go:generate go run ./self_sign_cert/self_sign_cert.go
+
+//////
+
 package certificate
 
 import (
@@ -13,21 +22,24 @@ import (
 	"time"
 )
 
-// Embed the certificate and key files
-// NOTE: you need to generate self-signed certificates and put them in this package (certificate)
+func getLocalhostCertAndKey(crtPath string, keyPath string) (embeddedCert []byte, embeddedKey []byte, err error) {
+	embeddedCert, err = os.ReadFile(crtPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("(crt file) please run go generate on the certificate folder first, could not read file: %v", err)
+	}
 
-//go:generate go run ./self_sign_cert/self_sign_cert.go
-//go:embed localhost_wedding_service.crt
-var embeddedCert []byte
-
-//go:embed localhost_wedding_service.key
-var embeddedKey []byte
+	embeddedKey, err = os.ReadFile(keyPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("(key file) please run go generate on the certificate folder first, could not read file: %v", err)
+	}
+	return embeddedCert, embeddedKey, nil
+}
 
 // UseLOCALHOST loads the embedded certificate and private key as a TLS certificate.
-func UseLOCALHOST() (*tls.Certificate, error) {
+func UseLOCALHOST(embeddedCert []byte, embeddedKey []byte) (*tls.Certificate, error) {
 	cert, err := tls.X509KeyPair(embeddedCert, embeddedKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load embedded TLS certificate: %w", err)
+		return nil, fmt.Errorf("failed to load embedded TLS certificate: %v", err)
 	}
 	return &cert, nil
 }
