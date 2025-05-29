@@ -8,5 +8,3 @@ coverage.out
 *.crt
 *.key
 *.exe
-go.sum
-go.work.sum
