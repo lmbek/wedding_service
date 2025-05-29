@@ -7,6 +7,17 @@ import (
 
 var Running bool
 
+func main() {
+	Start()
+
+	go Run()
+
+	// Let it run for 1 second
+	time.Sleep(2 * time.Second)
+
+	Stop()
+}
+
 func Start() {
 	Running = true
 	fmt.Println("Started")
