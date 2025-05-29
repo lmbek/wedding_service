@@ -147,12 +147,12 @@ func Test_getLocalhostCertAndKeys(t *testing.T) {
 	}
 
 	t.Run("test_invalid_paths", func(t *testing.T) {
-		_, _, err = getLocalhostCertAndKey("invalid_path", "localhost_wedding_service.key")
+		_, _, err = getLocalhostCertAndKey("invalid_path", os.Getenv("LOCALHOST_KEY"))
 		if err == nil {
 			t.Errorf("should not get error \n")
 		}
 
-		_, _, err = getLocalhostCertAndKey("localhost_wedding_service.crt", "invalid_path")
+		_, _, err = getLocalhostCertAndKey("LOCALHOST_CERT", "invalid_path")
 		if err == nil {
 			t.Errorf("should not get error \n")
 		}

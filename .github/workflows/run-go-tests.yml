@@ -23,6 +23,9 @@ jobs:
             - name: Download dependencies
               run: go mod tidy
 
+            - name: Run go generate # we need to generate localhost certificates
+              run: go generate ./...
+
             - name: Run tests
               run: go test -count=1 -v ./...
 
