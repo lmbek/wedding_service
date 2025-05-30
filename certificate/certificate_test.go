@@ -25,7 +25,7 @@ func TestUseACME(t *testing.T) {
 		directHostnameTestCases := []HostPolicyTestCase{
 			{inputHostname: os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME"), shouldExpectValidationError: false},
 			{inputHostname: "unauthorized.com", shouldExpectValidationError: true},
-			{inputHostname: "example.com", shouldExpectValidationError: true},
+			{inputHostname: "www.unauthorized.com", shouldExpectValidationError: true},
 		}
 
 		for _, hostPolicyTestCase := range directHostnameTestCases {
