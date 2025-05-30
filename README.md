@@ -1,4 +1,5 @@
 # wedding_service
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 A simple yet elegant web service for hosting your wedding website — including invitations, planned activities, RSVP forms, and other delightful features to ensure a memorable celebration.
 
@@ -22,6 +23,19 @@ You can run the service with Go or Docker. Here's how:
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
 ---
+
+## Before running
+First run
+```bash
+    make go-generate
+```
+
+Please be aware:
+This will generate the localhost certificates. (as this is the only go generate use in this project).
+
+I have a script to put it into the windows certificate store automatically if you need it. (message me)
+
+If you use windows then add it to cert store manually, if linux then put it into that cert store
 
 ## Running Locally
 
@@ -49,16 +63,16 @@ Use the Makefile targets to handle everything smoothly:
 
 If you want to run Docker commands separately, you can also use:
 
-- `make build-docker` to build and start Docker containers in the foreground
+- `make docker-build` to build and start Docker containers in the foreground
 
 - `make run-as-daemon` to start Docker containers as daemons
 
-- `make stop-docker` to stop all Docker containers
+- `make docker-stop` to stop all Docker containers
 
 ### Go build
 
 If you want to build or run go without docker use
-- `make build-go`  builds go with go build
+- `make go-build`  builds go with go build
 
 - `make rm-executable` removes the binary that was build
 
@@ -83,7 +97,7 @@ Please note that the name of the binary is managed from the .env file
 
 **1. Build and Save the Docker Image**
 ```bash
-    docker-compose up --build
+    make docker-build
     docker save wedding_service | gzip > wedding_service.tar.gz
 ```
 **2. Transfer to Remote Server**

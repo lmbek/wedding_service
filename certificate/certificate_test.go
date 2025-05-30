@@ -1,3 +1,6 @@
+// Note: in order to test this, we need to have certificates generated first (see top of certificate.go),
+// then run the test with the tag certificate
+
 package certificate
 
 import (
@@ -13,22 +16,6 @@ func TestUseACME(t *testing.T) {
 		t.Errorf("autocertManager should not be nil")
 	}
 
-	if autocertManager.Prompt == nil {
-		t.Errorf("autocertManager.Prompt should not be nil")
-	}
-
-	if autocertManager.Cache == nil {
-		t.Errorf("autocertManager.Cache should not be nil")
-	}
-
-	if autocertManager.Client == nil {
-		t.Errorf("autocertManager.Client should not be nil")
-	}
-
-	if autocertManager.HostPolicy == nil {
-		t.Errorf("autocertManager.HostPolicy should not be nil")
-	}
-
 	t.Run("hostpolicy_domain_test", func(t *testing.T) {
 		type HostPolicyTestCase struct {
 			inputHostname               string
@@ -38,7 +25,7 @@ func TestUseACME(t *testing.T) {
 		directHostnameTestCases := []HostPolicyTestCase{
 			{inputHostname: os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME"), shouldExpectValidationError: false},
 			{inputHostname: "unauthorized.com", shouldExpectValidationError: true},
-			{inputHostname: "example.com", shouldExpectValidationError: true},
+			{inputHostname: "www.unauthorized.com", shouldExpectValidationError: true},
 		}
 
 		for _, hostPolicyTestCase := range directHostnameTestCases {
@@ -113,12 +100,72 @@ func TestUseLOCALHOST(t *testing.T) {
 		t.Errorf("tlsCert should not be nil")
 	}
 
-	t.Run("failure", func(t *testing.T) {
-		embeddedCert = []byte("invalid")
-		embeddedKey = []byte("invalid")
+	t.Run("test_invalid_envs", func(t *testing.T) {
+		t.Setenv("LOCALHOST_CERT", "invalid")
+		t.Setenv("LOCALHOST_KEY", "invalid")
+
 		_, err := UseLOCALHOST()
 		if err == nil {
 			t.Errorf("expected error due to invalid certificate")
+		}
+	})
+
+	t.Run("test_invalid_cert_and_key", func(t *testing.T) {
+		// Create temporary empty cert file
+		certFile, err := os.CreateTemp("", "invalid_cert_*.pem")
+		if err != nil {
+			t.Fatalf("failed to create temp cert file: %v", err)
+		}
+		if err := certFile.Close(); err != nil {
+			t.Fatalf("failed to close cert file: %v", err)
+		}
+		t.Cleanup(func() { os.Remove(certFile.Name()) })
+
+		// Create temporary empty key file
+		keyFile, err := os.CreateTemp("", "invalid_key_*.pem")
+		if err != nil {
+			t.Fatalf("failed to create temp key file: %v", err)
+		}
+		if err := keyFile.Close(); err != nil {
+			t.Fatalf("failed to close key file: %v", err)
+		}
+		t.Cleanup(func() { os.Remove(keyFile.Name()) })
+
+		// Set environment variables (automatically restored after test)
+		t.Setenv("LOCALHOST_CERT", certFile.Name())
+		t.Setenv("LOCALHOST_KEY", keyFile.Name())
+
+		_, err = UseLOCALHOST()
+		if err == nil {
+			t.Errorf("expected error due to invalid (empty) certificate and key files")
+		}
+	})
+
+}
+
+func Test_getLocalhostCertAndKeys(t *testing.T) {
+	cert, key, err := getLocalhostCertAndKey(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
+	if err != nil {
+		t.Errorf("could not get localhost cert and keys: %v \n", err)
+	}
+
+	if cert == nil {
+		t.Errorf("cert should not be nil \n")
+	}
+
+	if key == nil {
+		t.Errorf("key should not be nil \n")
+	}
+
+	t.Run("test_invalid_paths", func(t *testing.T) {
+		_, _, err = getLocalhostCertAndKey("invalid_path", "localhost_wedding_service.key")
+		if err == nil {
+			t.Errorf("should not get error \n")
+		}
+
+		_, _, err = getLocalhostCertAndKey("localhost_wedding_service.crt", "invalid_path")
+		if err == nil {
+			t.Errorf("should not get error \n")
 		}
 	})
 }

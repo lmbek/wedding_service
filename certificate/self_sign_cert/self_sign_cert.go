@@ -1,5 +1,9 @@
 //go:build self_sign_cert
 
+// NOTE: this file is ignored by the default build
+// the test coverage of this tool is 67.9%
+// as it is a tool, we don't count this test coverage in our total
+
 package main
 
 import (
@@ -18,7 +22,7 @@ func main() {
 	createSelfSignedCertificateFile()
 }
 
-// createSelfSignedCertificateFile generates a self-signed certificate and saves it to files with a timestamp
+// CreateSelfSignedCertificateFile generates a self-signed certificate and saves it to files with a timestamp
 func createSelfSignedCertificateFile() {
 	// Generate the certificate
 	cert, privKeyPEM, err := generateSelfSignedCertificatePEM()

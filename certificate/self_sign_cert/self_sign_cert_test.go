@@ -1,5 +1,9 @@
 //go:build self_sign_cert
 
+// NOTE: this test is ignored by the default tests
+// the test coverage of this tool is 67.9%
+// as it is a tool, we don't count this test coverage in our total
+
 package main
 
 import (

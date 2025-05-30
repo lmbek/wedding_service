@@ -1,15 +1,11 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
 func main() {
-	i := 0
-	for {
-		i++
-		fmt.Printf("Hej %v\n", i)
-		time.Sleep(1 * time.Second)
-	}
+	start()
+}
+
+func start() {
+	fmt.Println("coming soon")
 }
