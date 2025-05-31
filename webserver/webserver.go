@@ -1,15 +1,35 @@
 package webserver
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
+	"wedding_service/certificate"
 )
 
-func Start() error {
+func Start(httpServer *http.Server, httpsServer *http.Server, certPath string, keyPath string) error {
+	httpsServer.TLSConfig = &tls.Config{
+		MinVersion: tls.VersionTLS12, // HTTP/2 requires TLS 1.2 or higher
+		NextProtos: []string{"h2"},   // Enforce HTTP/2
+	}
 
-	return errors.New("Not implemented")
+	if os.Getenv("MODE") == "development" {
+		cert, err := certificate.UseLOCALHOST(certPath, keyPath)
+		if err != nil {
+			return fmt.Errorf("could not use localhost certificate: %v\n", err)
+		}
+		httpsServer.TLSConfig.Certificates = []tls.Certificate{*cert}
+	}
+
+	if os.Getenv("MODE") == "production" {
+		autoCertManager := certificate.UseACME()
+		httpsServer.TLSConfig.GetCertificate = autoCertManager.GetCertificate
+	}
+
+	return ListenAndServe(httpServer, httpsServer)
 }
 
 func ListenAndServe(httpServer *http.Server, httpsServer *http.Server) error {

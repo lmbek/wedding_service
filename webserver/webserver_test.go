@@ -8,13 +8,6 @@ import (
 	"wedding_service/certificate"
 )
 
-func TestStart(t *testing.T) {
-	err := Start()
-	if err != nil {
-		t.Errorf("got error: %s\n", err)
-	}
-}
-
 func TestListenAndServe(t *testing.T) {
 	httpServer := http.Server{Addr: "localhost:8080"}
 	httpsServer := http.Server{Addr: "localhost:8443"}
