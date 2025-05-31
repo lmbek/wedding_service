@@ -3,7 +3,8 @@
 // You need to generate self-signed certificates
 // by running go generate
 
-//go:generate go run ./self_sign_cert/self_sign_cert.go
+//// go:generate go run ./self_sign_cert/self_sign_cert.go
+//go:generate go run ./self_sign_cert_windows/self_sign_cert_windows.go
 
 //////
 
@@ -36,8 +37,8 @@ func getLocalhostCertAndKey(crtPath string, keyPath string) (cert []byte, key []
 }
 
 // UseLOCALHOST loads the certificate and private key as a TLS certificate.
-func UseLOCALHOST() (tlsCert *tls.Certificate, err error) {
-	cert, key, err := getLocalhostCertAndKey(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
+func UseLOCALHOST(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
+	cert, key, err := getLocalhostCertAndKey(certPath, keyPath)
 	if err != nil {
 		return nil, err
 	}
