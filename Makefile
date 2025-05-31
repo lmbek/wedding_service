@@ -11,6 +11,8 @@ BUILD_DIR=./docker-volumes/main-service-files
 # Default: clean, build, and run containers as daemon
 all: docker-stop rm-executable go-build run-as-daemon
 
+generate: go-generate
+
 go-generate:
 	@echo "Running go generate..."
 	go generate ./...
@@ -39,6 +41,14 @@ docker-build:
 run-as-daemon:
 	@echo "Starting Docker containers as daemons..."
 	docker-compose up -d
+	@echo
+
+run: go-run
+
+go-run:
+	@echo "Running go for $(TEST_GOOS)/$(TEST_GOARCH)..."
+	GOOS=$(TEST_GOOS) GOARCH=$(TEST_GOARCH)
+	go run .
 	@echo
 
 test: go-test
