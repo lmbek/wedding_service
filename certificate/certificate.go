@@ -38,6 +38,7 @@ func getLocalhostCertAndKey(crtPath string, keyPath string) (cert []byte, key []
 
 // UseLOCALHOST loads the certificate and private key as a TLS certificate.
 func UseLOCALHOST(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
+	// TODO - optimize the env to support both using makefile and not using it
 	cert, key, err := getLocalhostCertAndKey(certPath, keyPath)
 	if err != nil {
 		return nil, err
