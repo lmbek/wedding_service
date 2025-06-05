@@ -91,7 +91,7 @@ func TestUseACME(t *testing.T) {
 }
 
 func TestUseLOCALHOST(t *testing.T) {
-	tlsCert, err := UseLOCALHOST()
+	tlsCert, err := UseLOCALHOST(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
 	if err != nil {
 		t.Errorf("Got err: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestUseLOCALHOST(t *testing.T) {
 		t.Setenv("LOCALHOST_CERT", "invalid")
 		t.Setenv("LOCALHOST_KEY", "invalid")
 
-		_, err := UseLOCALHOST()
+		_, err := UseLOCALHOST(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
 		if err == nil {
 			t.Errorf("expected error due to invalid certificate")
 		}
@@ -135,7 +135,7 @@ func TestUseLOCALHOST(t *testing.T) {
 		t.Setenv("LOCALHOST_CERT", certFile.Name())
 		t.Setenv("LOCALHOST_KEY", keyFile.Name())
 
-		_, err = UseLOCALHOST()
+		_, err = UseLOCALHOST(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
 		if err == nil {
 			t.Errorf("expected error due to invalid (empty) certificate and key files")
 		}
