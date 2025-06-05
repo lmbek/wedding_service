@@ -16,5 +16,6 @@ func main() {
 }
 
 func start() error {
+	// TODO - less parameters
 	return webserver.Start(httpServer, httpsServer, filepath.Join("certificate", os.Getenv("LOCALHOST_CERT")), filepath.Join("certificate", os.Getenv("LOCALHOST_KEY")))
 }
