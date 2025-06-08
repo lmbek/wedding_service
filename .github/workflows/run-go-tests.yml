@@ -23,8 +23,12 @@ jobs:
             - name: Download dependencies
               run: go mod tidy
 
-            - name: Copy .env.github to .env
-              run: cp .env.github .env
+            - name: Copy .env.example to .env
+              run: cp .env.example .env
+
+            # append TEST_GOOS=linux to .env to tell GitHub to use linux
+            - name: Set environment variable TEST_GOOS=linux in .env
+              run: echo "TEST_GOOS=linux" >> .env
 
             - name: Run go generate using Makefile # we need to generate localhost certificates
               run: make go-generate
