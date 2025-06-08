@@ -3,6 +3,74 @@
 
 package certificate
 
+import (
+	"os"
+	"strings"
+	"testing"
+)
+
+func TestGetLocalhostCertAndKey(t *testing.T) {
+	// Create temporary cert and key files with dummy data
+	certFile, err := os.CreateTemp("", "cert-*.crt")
+	if err != nil {
+		t.Fatalf("failed to create temp cert file: %v", err)
+	}
+	defer os.Remove(certFile.Name())
+
+	keyFile, err := os.CreateTemp("", "key-*.key")
+	if err != nil {
+		t.Fatalf("failed to create temp key file: %v", err)
+	}
+	defer os.Remove(keyFile.Name())
+
+	certContent := []byte("dummy cert content")
+	keyContent := []byte("dummy key content")
+
+	if _, err := certFile.Write(certContent); err != nil {
+		t.Fatalf("failed to write to cert file: %v", err)
+	}
+	if _, err := keyFile.Write(keyContent); err != nil {
+		t.Fatalf("failed to write to key file: %v", err)
+	}
+
+	// Close the files so they can be read
+	certFile.Close()
+	keyFile.Close()
+
+	t.Run("success", func(t *testing.T) {
+		cert, key, err := getLocalhostCertAndKey(certFile.Name(), keyFile.Name())
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if string(cert) != string(certContent) {
+			t.Errorf("cert content mismatch, got %s, want %s", cert, certContent)
+		}
+		if string(key) != string(keyContent) {
+			t.Errorf("key content mismatch, got %s, want %s", key, keyContent)
+		}
+	})
+
+	t.Run("fail cert read", func(t *testing.T) {
+		_, _, err := getLocalhostCertAndKey("nonexistent-cert-file", keyFile.Name())
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "(cert file)") {
+			t.Errorf("expected error about cert file, got %v", err)
+		}
+	})
+
+	t.Run("fail key read", func(t *testing.T) {
+		_, _, err := getLocalhostCertAndKey(certFile.Name(), "nonexistent-key-file")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "(key file)") {
+			t.Errorf("expected error about key file, got %v", err)
+		}
+	})
+}
+
 // TODO: develop the certificate tests
 
 //func TestUseACME(t *testing.T) {
