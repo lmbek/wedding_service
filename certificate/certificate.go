@@ -14,6 +14,7 @@ import (
 	"context"
 	"crypto/tls"
 	_ "embed"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
@@ -23,38 +24,56 @@ import (
 	"time"
 )
 
-func getLocalhostCertAndKey(crtPath string, keyPath string) (cert []byte, key []byte, err error) {
-	cert, err = os.ReadFile(crtPath)
+func getLocalhostCertAndKey(certPath string, keyPath string) (cert []byte, key []byte, err error) {
+	cert, err = os.ReadFile(certPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("(crt file) please run go generate on the certificate folder first, could not read file: %v", err)
+		return nil, nil, fmt.Errorf("(cert file) please run go generate first: %w", err)
 	}
 
 	key, err = os.ReadFile(keyPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("(key file) please run go generate on the certificate folder first, could not read file: %v", err)
+		return nil, nil, fmt.Errorf("(key file) please run go generate first: %w", err)
 	}
 	return cert, key, nil
 }
 
 // UseLOCALHOST loads the certificate and private key as a TLS certificate.
-func UseLOCALHOST(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
-	// TODO - optimize the env to support both using makefile and not using it
-	cert, key, err := getLocalhostCertAndKey(certPath, keyPath)
+func UseLOCALHOST() (tlsCert *tls.Certificate, err error) {
+	cert, key, err := getLocalhostCertAndKey(
+		os.Getenv("LOCALHOST_CERT"),
+		os.Getenv("LOCALHOST_KEY"),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get LOCALHOST_CERT in .env: %w", err)
 	}
 
 	x509KeyPair, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load TLS certificate: %v", err)
+		return nil, fmt.Errorf("failed to load TLS certificate: %w", err)
 	}
 	return &x509KeyPair, nil
 }
 
 // UseACME initializes the autocert.Manager for managing certificates.
-func UseACME() *autocert.Manager {
-	domainAliases := map[string][]string{
-		os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME"): {os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME_ALIAS1")},
+func UseACME() (acmeManager *autocert.Manager, err error) {
+	hostnames := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
+	if hostnames == "" {
+		return nil, errors.New("hostnames must not be empty, should have format: INSERT HERE")
+	}
+
+	domainAliases := make(map[string][]string)
+
+	// Split hostname groups by semicolon
+	groups := strings.Split(hostnames, "|")
+	for _, group := range groups {
+		// Split hostname and aliases by colon
+		parts := strings.SplitN(group, ":", 2)
+		hostname := parts[0]
+		var aliases []string
+		if len(parts) == 2 {
+			aliases = strings.Split(parts[1], ",")
+		}
+		domainAliases[hostname] = aliases
 	}
 
 	return &autocert.Manager{
@@ -81,5 +100,5 @@ func UseACME() *autocert.Manager {
 				return time.Duration(math.Pow(2, float64(n))) * time.Second
 			},
 		},
-	}
+	}, nil
 }
