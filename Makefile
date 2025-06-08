@@ -39,7 +39,7 @@ go-build:
 
 go-build-for-github:
 	@echo "Building $(APP_NAME) for $(DOCKER_GOOS)/$(DOCKER_GOARCH)..."
-	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(APP_NAME) .
 	# this go build cannot run in development mode, as certificates is not on github (and we dont have perm to create)
 	@echo
 
