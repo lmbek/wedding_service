@@ -38,7 +38,7 @@ func NewWebserver() (w Webserver, err error) {
 	}
 
 	if env.IsModeDevelopment() {
-		cert, err := certificate.UseLOCALHOST()
+		cert, err := certificate.UseLocalhost()
 		if err != nil {
 			return nil, fmt.Errorf("could not use localhost certificate: %w", err)
 		}
@@ -46,7 +46,7 @@ func NewWebserver() (w Webserver, err error) {
 	}
 
 	if env.IsModeProduction() {
-		acmeManager, err := certificate.UseACME()
+		acmeManager, err := certificate.UseAcme()
 		if err != nil {
 			return nil, fmt.Errorf("could not use acme manager: %w", err)
 		}

@@ -38,8 +38,8 @@ func getLocalhostCertAndKey(certPath string, keyPath string) (cert []byte, key [
 	return cert, key, nil
 }
 
-// UseLOCALHOST loads the certificate and private key as a TLS certificate.
-func UseLOCALHOST() (tlsCert *tls.Certificate, err error) {
+// UseLocalhost loads the certificate and private key as a TLS certificate.
+func UseLocalhost() (tlsCert *tls.Certificate, err error) {
 	cert, key, err := getLocalhostCertAndKey(
 		os.Getenv("LOCALHOST_CERT"),
 		os.Getenv("LOCALHOST_KEY"),
@@ -55,8 +55,8 @@ func UseLOCALHOST() (tlsCert *tls.Certificate, err error) {
 	return &x509KeyPair, nil
 }
 
-// UseACME initializes the autocert.Manager for managing certificates.
-func UseACME() (acmeManager *autocert.Manager, err error) {
+// UseAcme initializes the autocert.Manager for managing certificates.
+func UseAcme() (acmeManager *autocert.Manager, err error) {
 	hostnames := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
 	if hostnames == "" {
 		return nil, errors.New("hostnames must not be empty, should have format: INSERT HERE")
