@@ -27,7 +27,7 @@ rm-executable:
 	@echo
 
 go-build:
-	@echo "Copying dependencies"
+	@echo "Copying dependencies..."
 	mkdir -p $(BUILD_DIR)/certificate/
 	cp $(LOCALHOST_CERT) $(BUILD_DIR)/certificate/
 	cp $(LOCALHOST_KEY) $(BUILD_DIR)/certificate/
