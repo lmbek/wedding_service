@@ -5,6 +5,7 @@
 .env
 docker-volumes
 coverage.out
+*.prof
 *.crt
 *.key
 *.exe
