@@ -37,6 +37,12 @@ go-build:
 	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
+go-build-for-github:
+	@echo "Building $(APP_NAME) for $(DOCKER_GOOS)/$(DOCKER_GOARCH)..."
+	GOOS=$(DOCKER_GOOS) GOARCH=$(DOCKER_GOARCH) CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	# this go build cannot run in development mode, as certificates is not on github (and we dont have perm to create)
+	@echo
+
 docker-build:
 	@echo "Building Docker containers..."
 	docker-compose up --build
