@@ -55,7 +55,27 @@ func Test_useCertificate(t *testing.T) {
 		env.Env.Mode = ""
 		err := useCertificate(httpsServer)
 		if err == nil {
-			t.Errorf("err should be nil")
+			t.Errorf("err should not be nil")
 		}
+	})
+
+	t.Run("test useCertificate development mode certificate error", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.Mode = "development"
+		env.Env.CertPath = ""
+		err := useCertificate(httpsServer)
+		if err == nil {
+			t.Errorf("err should not be nil")
+		}
+	})
+
+	t.Run("test useCertificate production mode certificate error", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.Mode = "production"
+
+	})
+
+	t.Run("test wrapCert", func(t *testing.T) {
+
 	})
 }
