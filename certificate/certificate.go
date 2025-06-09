@@ -21,11 +21,11 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"strings"
 	"time"
+	"wedding_service/env"
 )
 
-func getLocalhostCertAndKey(certPath string, keyPath string) (cert []byte, key []byte, err error) {
+func getSelfSignedCertAndKey(certPath string, keyPath string) (cert []byte, key []byte, err error) {
 	cert, err = os.ReadFile(certPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("(cert file) please run go generate first: %w", err)
@@ -35,19 +35,26 @@ func getLocalhostCertAndKey(certPath string, keyPath string) (cert []byte, key [
 	if err != nil {
 		return nil, nil, fmt.Errorf("(key file) please run go generate first: %w", err)
 	}
+
 	return cert, key, nil
 }
 
-// UseLocalhost loads the certificate and private key as a TLS certificate.
-func UseLocalhost() (tlsCert *tls.Certificate, err error) {
-	cert, key, err := getLocalhostCertAndKey(
-		os.Getenv("LOCALHOST_CERT"),
-		os.Getenv("LOCALHOST_KEY"),
-	)
+// UseSelfSigned loads the certificate and private key as a TLS certificate.
+func UseSelfSigned(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
+	cert, key, err := getSelfSignedCertAndKey(certPath, keyPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not get LOCALHOST_CERT in .env: %w", err)
+		return nil, fmt.Errorf("could not GetSelfSignedCertAndKey: %w", err)
 	}
 
+	tlsCert, err = loadTLSKeyPair(cert, key)
+	if err != nil {
+		return nil, fmt.Errorf("could not loadTLSKeyPair: %w", err)
+	}
+
+	return
+}
+
+func loadTLSKeyPair(cert []byte, key []byte) (*tls.Certificate, error) {
 	x509KeyPair, err := tls.X509KeyPair(cert, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load TLS certificate: %w", err)
@@ -57,49 +64,40 @@ func UseLocalhost() (tlsCert *tls.Certificate, err error) {
 
 // UseAcme initializes the autocert.Manager for managing certificates.
 func UseAcme() (acmeManager *autocert.Manager, err error) {
-	hostnames := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
-	if hostnames == "" {
-		return nil, errors.New("hostnames must not be empty, should have format: INSERT HERE")
-	}
-
-	domainAliases := make(map[string][]string)
-
-	// Split hostname groups by semicolon
-	groups := strings.Split(hostnames, "|")
-	for _, group := range groups {
-		// Split hostname and aliases by colon
-		parts := strings.SplitN(group, ":", 2)
-		hostname := parts[0]
-		var aliases []string
-		if len(parts) == 2 {
-			aliases = strings.Split(parts[1], ",")
-		}
-		domainAliases[hostname] = aliases
+	hostnames := env.Env.Hostnames
+	if hostnames == nil && len(hostnames) >= 1 {
+		return nil, errors.New("hostnames must not be empty, should have format: domain:alias,alias2|domain2:alias3")
 	}
 
 	return &autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache("certs"),
-		HostPolicy: func(ctx context.Context, host string) error {
-			// Validate host against configured domains and aliases
-			for domain, aliases := range domainAliases {
-				if host == domain {
-					return nil
-				}
-				for _, alias := range aliases {
-					if host == alias {
-						return nil
-					}
-				}
-			}
-			return fmt.Errorf("unauthorized host: %s", host)
-		},
+		Prompt:     autocert.AcceptTOS,
+		Cache:      autocert.DirCache("certs"),
+		HostPolicy: handleHostPolicy(hostnames),
 		Client: &acme.Client{
 			DirectoryURL: "https://acme-v02.api.letsencrypt.org/directory", // zerossl: "https://acme.zerossl.com/v2/DV90"
-			RetryBackoff: func(n int, r *http.Request, resp *http.Response) time.Duration {
-				// Exponential backoff: Retry after 2^n seconds, where n is the attempt number
-				return time.Duration(math.Pow(2, float64(n))) * time.Second
-			},
+			RetryBackoff: handleRetryBackoff,
 		},
 	}, nil
+}
+
+// Validate host against configured domains and aliases
+func handleHostPolicy(domainAliases map[string][]string) autocert.HostPolicy {
+	return func(ctx context.Context, host string) error {
+		for domain, aliases := range domainAliases {
+			if host == domain {
+				return nil
+			}
+			for _, alias := range aliases {
+				if host == alias {
+					return nil
+				}
+			}
+		}
+		return fmt.Errorf("unauthorized host: %s", host)
+	}
+}
+
+// handleRetryBackoff handles exponential backoff: Retry after 2^n seconds, where n is the attempt number
+func handleRetryBackoff(n int, r *http.Request, resp *http.Response) time.Duration {
+	return time.Duration(math.Pow(2, float64(n))) * time.Second
 }

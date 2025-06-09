@@ -7,61 +7,49 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"wedding_service/env"
 )
 
-func TestGetLocalhostCertAndKey(t *testing.T) {
-	// Create temporary cert and key files with dummy data
-	certFile, err := os.CreateTemp("", "cert-*.crt")
-	if err != nil {
-		t.Fatalf("failed to create temp cert file: %v", err)
-	}
-	defer os.Remove(certFile.Name())
-
-	keyFile, err := os.CreateTemp("", "key-*.key")
-	if err != nil {
-		t.Fatalf("failed to create temp key file: %v", err)
-	}
-	defer os.Remove(keyFile.Name())
-
+func Test_getSelfSignedCertAndKey(t *testing.T) {
 	certContent := []byte("dummy cert content")
 	keyContent := []byte("dummy key content")
 
-	if _, err := certFile.Write(certContent); err != nil {
-		t.Fatalf("failed to write to cert file: %v", err)
-	}
-	if _, err := keyFile.Write(keyContent); err != nil {
-		t.Fatalf("failed to write to key file: %v", err)
-	}
+	certPath := createTempFile(t, "cert-*.crt", certContent)
+	defer os.Remove(certPath)
 
-	// Close the files so they can be read
-	certFile.Close()
-	keyFile.Close()
+	keyPath := createTempFile(t, "key-*.key", keyContent)
+	defer os.Remove(keyPath)
 
 	t.Run("success", func(t *testing.T) {
-		cert, key, err := getLocalhostCertAndKey(certFile.Name(), keyFile.Name())
+		cert, key, err := getSelfSignedCertAndKey(certPath, keyPath)
 		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
+			t.Errorf("could not getLocalhostCertAndKey: %v", err)
+			return
 		}
 		if string(cert) != string(certContent) {
-			t.Errorf("cert content mismatch, got %s, want %s", cert, certContent)
+			t.Errorf("cert content mismatch, got %q, want %q", cert, certContent)
+			return
 		}
 		if string(key) != string(keyContent) {
-			t.Errorf("key content mismatch, got %s, want %s", key, keyContent)
+			t.Errorf("key content mismatch, got %q, want %q", key, keyContent)
+			return
 		}
 	})
 
 	t.Run("fail cert read", func(t *testing.T) {
-		_, _, err := getLocalhostCertAndKey("nonexistent-cert-file", keyFile.Name())
+		_, _, err := getSelfSignedCertAndKey("nonexistent-cert-file", keyPath)
 		if err == nil {
-			t.Fatal("expected error, got nil")
+			t.Errorf("expected error, got nil")
+			return
 		}
 		if !strings.Contains(err.Error(), "(cert file)") {
 			t.Errorf("expected error about cert file, got %v", err)
+			return
 		}
 	})
 
 	t.Run("fail key read", func(t *testing.T) {
-		_, _, err := getLocalhostCertAndKey(certFile.Name(), "nonexistent-key-file")
+		_, _, err := getSelfSignedCertAndKey(certPath, "nonexistent-key-file")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -71,168 +59,184 @@ func TestGetLocalhostCertAndKey(t *testing.T) {
 	})
 }
 
-// TODO: develop the certificate tests
+func TestUseSelfSigned(t *testing.T) {
+	t.Chdir("..")
+	env.Init()
+	defer env.Reset()
+
+	_, err := UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+	if err != nil {
+		t.Errorf("could not UseLocalhost: %s", err)
+		return
+	}
+
+	t.Run("invalid cert file paths", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.CertPath = "nonexistent-cert-file"
+		env.Env.KeyPath = "nonexistent-key-file"
+
+		UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+
+	})
+
+	t.Run("invalid cert files", func(t *testing.T) {
+		defer env.Reset()
+
+		tempDir := t.TempDir()
+
+		// Create temp cert and key files with garbage content
+		tempCert, err := os.CreateTemp(tempDir, "cert-*.pem")
+		if err != nil {
+			t.Fatalf("failed to create temp cert: %v", err)
+		}
+		defer tempCert.Close()
+
+		tempKey, err := os.CreateTemp(tempDir, "key-*.pem")
+		if err != nil {
+			t.Fatalf("failed to create temp key: %v", err)
+		}
+		defer tempKey.Close()
+
+		// Write invalid contents to simulate broken cert/key
+		//tempCert.WriteString("not a real cert")
+		//tempKey.WriteString("not a real key")
+
+		// Update the env to point to the files
+		env.Env.CertPath = tempCert.Name()
+		env.Env.KeyPath = tempKey.Name()
+
+		_, err = UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+		if err == nil {
+			t.Errorf("expected an error due to invalid cert/key content")
+		}
+	})
+}
+
+func Test_loadTLSKeyPair(t *testing.T) {
+	t.Chdir("..")
+	cert, key, err := getSelfSignedCertAndKey(env.Env.CertPath, env.Env.KeyPath)
+	if err != nil {
+		t.Errorf("could not getLocalhostCertAndKey: %s", err)
+		return
+	}
+
+	_, err = loadTLSKeyPair(cert, key)
+	if err != nil {
+		t.Errorf("could not loadTLSKeyPair: %s", err)
+		return
+	}
+
+	t.Run("fail", func(t *testing.T) {
+		_, err = loadTLSKeyPair(nil, nil)
+		if err == nil {
+			t.Errorf("error is nil")
+			return
+		}
+	})
+}
 
 //func TestUseACME(t *testing.T) {
-//	acmeManager, err := UseACME()
-//	if err != nil {
-//		t.Errorf("could not init acmeManager: %v", err)
-//	}
+//	t.Run("EmptyEnv_ShouldFail", func(t *testing.T) {
+//		// Backup and clear environment variable
+//		oldEnv := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
+//		defer os.Setenv("WEDDING_SERVICE_HOSTNAMES", oldEnv)
+//		os.Unsetenv("WEDDING_SERVICE_HOSTNAMES")
 //
-//	if acmeManager == nil {
-//		t.Errorf("autocertManager should not be nil")
-//	}
-//
-//	t.Run("hostpolicy_domain_test", func(t *testing.T) {
-//		type HostPolicyTestCase struct {
-//			inputHostname               string
-//			shouldExpectValidationError bool
-//		}
-//
-//		directHostnameTestCases := []HostPolicyTestCase{
-//			{inputHostname: os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME"), shouldExpectValidationError: false},
-//			{inputHostname: "unauthorized.com", shouldExpectValidationError: true},
-//			{inputHostname: "www.unauthorized.com", shouldExpectValidationError: true},
-//		}
-//
-//		for _, hostPolicyTestCase := range directHostnameTestCases {
-//			validationError := acmeManager.HostPolicy(context.Background(), hostPolicyTestCase.inputHostname)
-//
-//			if hostPolicyTestCase.shouldExpectValidationError && validationError == nil {
-//				t.Errorf("Expected validation error for hostname '%s', but got none.", hostPolicyTestCase.inputHostname)
-//			}
-//			if !hostPolicyTestCase.shouldExpectValidationError && validationError != nil {
-//				t.Errorf("Did not expect error for hostname '%s', but got: %v", hostPolicyTestCase.inputHostname, validationError)
-//			}
-//		}
-//	})
-//
-//	t.Run("hostpolicy_domain_alias_test", func(t *testing.T) {
-//		type HostPolicyTestCase struct {
-//			inputHostname               string
-//			shouldExpectValidationError bool
-//		}
-//
-//		aliasHostnameTestCases := []HostPolicyTestCase{
-//			{inputHostname: os.Getenv("WEDDING_SERVICE_EXTERNAL_HOSTNAME_ALIAS1"), shouldExpectValidationError: false},
-//			{inputHostname: "unauthorized.com", shouldExpectValidationError: true},
-//			{inputHostname: "api.example.com", shouldExpectValidationError: true},
-//			{inputHostname: "dev.test.com", shouldExpectValidationError: true},
-//		}
-//
-//		for _, hostPolicyTestCase := range aliasHostnameTestCases {
-//			validationError := acmeManager.HostPolicy(context.Background(), hostPolicyTestCase.inputHostname)
-//
-//			if hostPolicyTestCase.shouldExpectValidationError && validationError == nil {
-//				t.Errorf("Expected validation error for alias hostname '%s', but got none.", hostPolicyTestCase.inputHostname)
-//			}
-//			if !hostPolicyTestCase.shouldExpectValidationError && validationError != nil {
-//				t.Errorf("Did not expect error for alias hostname '%s', but got: %v", hostPolicyTestCase.inputHostname, validationError)
-//			}
-//		}
-//	})
-//
-//	t.Run("client_retry_backoff_test", func(t *testing.T) {
-//		type RetryBackoffTestCase struct {
-//			attemptNumber int
-//			expectedDelay time.Duration
-//		}
-//
-//		retryBackoffTestCases := []RetryBackoffTestCase{
-//			{attemptNumber: 0, expectedDelay: 1 * time.Second},  // 2^0 = 1
-//			{attemptNumber: 1, expectedDelay: 2 * time.Second},  // 2^1 = 2
-//			{attemptNumber: 2, expectedDelay: 4 * time.Second},  // 2^2 = 4
-//			{attemptNumber: 3, expectedDelay: 8 * time.Second},  // 2^3 = 8
-//			{attemptNumber: 4, expectedDelay: 16 * time.Second}, // 2^4 = 16
-//		}
-//
-//		for _, retryBackoffTestCase := range retryBackoffTestCases {
-//			got := acmeManager.Client.RetryBackoff(retryBackoffTestCase.attemptNumber, nil, nil)
-//
-//			if got != retryBackoffTestCase.expectedDelay {
-//				t.Errorf("For attempt %d: expected %v, got %v", retryBackoffTestCase.attemptNumber, retryBackoffTestCase.expectedDelay, got)
-//			}
-//		}
-//	})
-//
-//}
-//
-//func TestUseLOCALHOST(t *testing.T) {
-//	tlsCert, err := UseLOCALHOST()
-//	if err != nil {
-//		t.Errorf("Got err: %v", err)
-//	}
-//
-//	if tlsCert == nil {
-//		t.Errorf("tlsCert should not be nil")
-//	}
-//
-//	t.Run("test_invalid_envs", func(t *testing.T) {
-//		t.Setenv("LOCALHOST_CERT", "invalid")
-//		t.Setenv("LOCALHOST_KEY", "invalid")
-//
-//		_, err := UseLOCALHOST()
+//		_, err := UseAcme()
 //		if err == nil {
-//			t.Errorf("expected error due to invalid certificate")
+//			t.Fatal("expected error for empty WEDDING_SERVICE_HOSTNAMES, got nil")
+//		}
+//		expected := "hostnames must not be empty"
+//		if !strings.Contains(err.Error(), expected) {
+//			t.Errorf("unexpected error: got %q, want substring %q", err.Error(), expected)
 //		}
 //	})
 //
-//	t.Run("test_invalid_cert_and_key", func(t *testing.T) {
-//		// Create temporary empty cert file
-//		certFile, err := os.CreateTemp("", "invalid_cert_*.pem")
+//	t.Run("ValidEnv_ShouldInitializeManager", func(t *testing.T) {
+//		// Backup and set valid environment
+//		oldEnv := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
+//		defer os.Setenv("WEDDING_SERVICE_HOSTNAMES", oldEnv)
+//		os.Setenv("WEDDING_SERVICE_HOSTNAMES", "example.com:www.example.com,api.example.com|test.com:dev.test.com")
+//
+//		acmeManager, err := UseAcme()
 //		if err != nil {
-//			t.Fatalf("failed to create temp cert file: %v", err)
+//			t.Fatalf("UseAcme failed: %v", err)
 //		}
-//		if err := certFile.Close(); err != nil {
-//			t.Fatalf("failed to close cert file: %v", err)
+//		if acmeManager == nil {
+//			t.Fatal("expected non-nil autocert.Manager")
 //		}
-//		t.Cleanup(func() { os.Remove(certFile.Name()) })
 //
-//		// Create temporary empty key file
-//		keyFile, err := os.CreateTemp("", "invalid_key_*.pem")
-//		if err != nil {
-//			t.Fatalf("failed to create temp key file: %v", err)
-//		}
-//		if err := keyFile.Close(); err != nil {
-//			t.Fatalf("failed to close key file: %v", err)
-//		}
-//		t.Cleanup(func() { os.Remove(keyFile.Name()) })
+//		t.Run("HostPolicy_Domain", func(t *testing.T) {
+//			tests := []struct {
+//				name       string
+//				host       string
+//				shouldFail bool
+//			}{
+//				{"example.com allowed", "example.com", false},
+//				{"test.com allowed", "test.com", false},
+//				{"unauthorized.com denied", "unauthorized.com", true},
+//				{"another.com denied", "another.com", true},
+//			}
+//			for _, tt := range tests {
+//				t.Run(tt.name, func(t *testing.T) {
+//					err := acmeManager.HostPolicy(context.Background(), tt.host)
+//					if tt.shouldFail && err == nil {
+//						t.Errorf("expected error for host %q, got nil", tt.host)
+//					}
+//					if !tt.shouldFail && err != nil {
+//						t.Errorf("unexpected error for host %q: %v", tt.host, err)
+//					}
+//				})
+//			}
+//		})
 //
-//		// Set environment variables (automatically restored after test)
-//		t.Setenv("LOCALHOST_CERT", certFile.Name())
-//		t.Setenv("LOCALHOST_KEY", keyFile.Name())
+//		t.Run("HostPolicy_DomainAliases", func(t *testing.T) {
+//			tests := []struct {
+//				name       string
+//				host       string
+//				shouldFail bool
+//			}{
+//				{"www.example.com allowed", "www.example.com", false},
+//				{"api.example.com allowed", "api.example.com", false},
+//				{"dev.test.com allowed", "dev.test.com", false},
+//				{"invalid.example.com denied", "invalid.example.com", true},
+//			}
+//			for _, tt := range tests {
+//				t.Run(tt.name, func(t *testing.T) {
+//					err := acmeManager.HostPolicy(context.Background(), tt.host)
+//					if tt.shouldFail && err == nil {
+//						t.Errorf("expected error for alias host %q, got nil", tt.host)
+//					}
+//					if !tt.shouldFail && err != nil {
+//						t.Errorf("unexpected error for alias host %q: %v", tt.host, err)
+//					}
+//				})
+//			}
+//		})
 //
-//		_, err = UseLOCALHOST()
-//		if err == nil {
-//			t.Errorf("expected error due to invalid (empty) certificate and key files")
-//		}
+//		t.Run("Client_RetryBackoff", func(t *testing.T) {
+//			for n := 0; n <= 4; n++ {
+//				expected := time.Duration(1<<n) * time.Second
+//				actual := acmeManager.Client.RetryBackoff(n, nil, nil)
+//				if actual != expected {
+//					t.Errorf("retry backoff failed at attempt %d: got %v, want %v", n, actual, expected)
+//				}
+//			}
+//		})
 //	})
-//
 //}
-//
-//func Test_getLocalhostCertAndKeys(t *testing.T) {
-//	cert, key, err := getLocalhostCertAndKey(os.Getenv("LOCALHOST_CERT"), os.Getenv("LOCALHOST_KEY"))
-//	if err != nil {
-//		t.Errorf("could not get localhost cert and keys: %v \n", err)
-//	}
-//
-//	if cert == nil {
-//		t.Errorf("cert should not be nil \n")
-//	}
-//
-//	if key == nil {
-//		t.Errorf("key should not be nil \n")
-//	}
-//
-//	t.Run("test_invalid_paths", func(t *testing.T) {
-//		_, _, err = getLocalhostCertAndKey("invalid_path", "localhost_wedding_service.key")
-//		if err == nil {
-//			t.Errorf("should not get error \n")
-//		}
-//
-//		_, _, err = getLocalhostCertAndKey("localhost_wedding_service.crt", "invalid_path")
-//		if err == nil {
-//			t.Errorf("should not get error \n")
-//		}
-//	})
-//}
+
+func createTempFile(t *testing.T, pattern string, content []byte) string {
+	t.Helper()
+	f, err := os.CreateTemp("", pattern)
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer f.Close()
+
+	if _, err := f.Write(content); err != nil {
+		t.Fatalf("failed to write to temp file: %v", err)
+	}
+
+	return f.Name()
+}
