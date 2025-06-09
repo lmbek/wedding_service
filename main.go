@@ -10,7 +10,7 @@ import (
 
 var mainWebserver webserver.Webserver
 
-// main starts the program (ignore errors as they are already handled by the other functions in main package
+// main starts the program (ignore errors as they are already handled by the other functions in main package)
 func main() {
 	env.Init()
 	m, _ := initMainWebserver()
