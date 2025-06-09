@@ -1,4 +1,14 @@
-//go:build self_sign_cert
+//go:build !windows && self_sign_cert
+
+// READ THIS FIRST:
+// create the certificate and key files for localhost first!
+// You need to generate self-signed certificates
+// by running go generate
+
+//// go:generate go run ./self_sign_cert/self_sign_cert.go
+//go:generate go run self_sign_cert.go
+
+//////
 
 // NOTE: this file is ignored by the default build
 // as it is a tool, we don't count this file in our test coverage total

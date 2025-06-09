@@ -11,7 +11,7 @@ generate: go-generate
 
 go-generate:
 	@echo "Running go generate..."
-	go generate ./...
+	go generate -tags self_sign_cert ./...
 	@echo
 
 down: docker-stop
@@ -28,9 +28,10 @@ rm-executable:
 
 go-build:
 	@echo "Copying dependencies..."
-	mkdir -p $(BUILD_DIR)/certificate/
-	cp $(LOCALHOST_CERT) $(BUILD_DIR)/certificate/
-	cp $(LOCALHOST_KEY) $(BUILD_DIR)/certificate/
+	# TODO: check if mkdir can generate a directory with a directory inside of it
+	mkdir -p $(BUILD_DIR)/certificate/self_sign_cert/
+	cp $(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
+	cp $(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
 	@echo
 
 	@echo "Building $(APP_NAME) for $(DOCKER_GOOS)/$(DOCKER_GOARCH)..."

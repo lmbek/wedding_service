@@ -1,13 +1,3 @@
-// READ THIS FIRST:
-// create the certificate and key files for localhost first!
-// You need to generate self-signed certificates
-// by running go generate
-
-//// go:generate go run ./self_sign_cert/self_sign_cert.go
-//go:generate go run ./self_sign_cert_windows/self_sign_cert_windows.go
-
-//////
-
 package certificate
 
 import (
