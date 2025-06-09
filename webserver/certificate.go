@@ -15,9 +15,7 @@ func useCertificate(httpsServer *http.Server) error {
 		if err != nil {
 			return fmt.Errorf("could not use localhost certificate: %w", err)
 		}
-		httpsServer.TLSConfig.GetCertificate = func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			return cert, nil
-		}
+		httpsServer.TLSConfig.GetCertificate = wrapCert(cert)
 	}
 
 	if env.IsModeProduction() {
@@ -33,4 +31,10 @@ func useCertificate(httpsServer *http.Server) error {
 	}
 
 	return nil
+}
+
+func wrapCert(cert *tls.Certificate) func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	return func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+		return cert, nil
+	}
 }
