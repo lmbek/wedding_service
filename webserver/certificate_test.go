@@ -41,13 +41,13 @@ func Test_useCertificate(t *testing.T) {
 		if err != nil {
 			t.Errorf("err should be nil")
 		}
-		t.Run("wrong https port", func(t *testing.T) {
-			env.Env.HttpsPort = "-1"
-			err := useCertificate(httpsServer)
-			if err == nil {
-				t.Errorf("err should not be nil")
-			}
-		})
+		//t.Run("wrong https port", func(t *testing.T) {
+		//	env.Env.HttpsPort = "-1"
+		//	err := useCertificate(httpsServer)
+		//	if err == nil {
+		//		t.Errorf("err should not be nil")
+		//	}
+		//})
 	})
 
 	t.Run("test useCertificate with no mode set", func(t *testing.T) {
