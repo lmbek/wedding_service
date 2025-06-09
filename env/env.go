@@ -10,24 +10,24 @@ import (
 var Env *environment
 
 type environment struct {
-	DebugLevel      int
-	Mode            string
-	HttpPort        string
-	HttpsPort       string
-	Hostnames       map[string][]string
-	CertificatePath string
-	KeyPath         string
+	DebugLevel int
+	Mode       string
+	HttpPort   string
+	HttpsPort  string
+	Hostnames  map[string][]string
+	CertPath   string
+	KeyPath    string
 }
 
 func Init() {
 	Env = &environment{
-		DebugLevel:      convertEnvToInt(os.Getenv("DEBUG")),
-		Mode:            strings.ToLower(os.Getenv("MODE")),
-		HttpPort:        os.Getenv("WEDDING_SERVICE_HTTP_PORT"),
-		HttpsPort:       os.Getenv("WEDDING_SERVICE_HTTPS_PORT"),
-		Hostnames:       readHostnames(os.Getenv("WEDDING_SERVICE_HOSTNAMES")),
-		CertificatePath: os.Getenv("LOCALHOST_CERT"),
-		KeyPath:         os.Getenv("LOCALHOST_KEY"),
+		DebugLevel: convertEnvToInt(os.Getenv("DEBUG")),
+		Mode:       strings.ToLower(os.Getenv("MODE")),
+		HttpPort:   os.Getenv("WEDDING_SERVICE_HTTP_PORT"),
+		HttpsPort:  os.Getenv("WEDDING_SERVICE_HTTPS_PORT"),
+		Hostnames:  readHostnames(os.Getenv("WEDDING_SERVICE_HOSTNAMES")),
+		CertPath:   os.Getenv("SELF_SIGNED_CERT_PATH"),
+		KeyPath:    os.Getenv("SELF_SIGNED_KEY_PATH"),
 	}
 }
 
