@@ -11,11 +11,13 @@ func Test_useCertificate(t *testing.T) {
 	t.Chdir("..")
 	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
 
+	// test if our current mode in .env works
 	err := useCertificate(httpsServer)
 	if err != nil {
 		t.Errorf("could not useCertificate %s", err)
 	}
 
+	// test if development mode works
 	t.Run("development mode set", func(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "development"
@@ -24,13 +26,16 @@ func Test_useCertificate(t *testing.T) {
 			t.Errorf("could not useCertificate for mode development: %s", err)
 		}
 	})
+
+	// test if development mode with bad hostname gives err
 	t.Run("development mode set and bad hostnames given", func(t *testing.T) {
-		// TODO: cant make test before env.Env is more expanded
 		defer env.Reset()
-		env.Env.Hostnames = nil
+		env.Env.Mode = "development"
+		env.Env.CertPath = "invalid_cert_path"
+		env.Env.KeyPath = "invalid_key_path"
 		err := useCertificate(httpsServer)
 		if err == nil {
-			//t.Errorf("err should not be nil")
+			t.Errorf("err should not be nil")
 		}
 	})
 
@@ -39,15 +44,17 @@ func Test_useCertificate(t *testing.T) {
 		env.Env.Mode = "production"
 		err := useCertificate(httpsServer)
 		if err != nil {
-			t.Errorf("err should be nil")
+			t.Errorf("could not useCertificate: %s", err)
 		}
-		//t.Run("wrong https port", func(t *testing.T) {
-		//	env.Env.HttpsPort = "-1"
-		//	err := useCertificate(httpsServer)
-		//	if err == nil {
-		//		t.Errorf("err should not be nil")
-		//	}
-		//})
+	})
+	t.Run("wrong https port", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.Mode = "production"
+		env.Env.Hostnames = nil
+		err := useCertificate(httpsServer)
+		if err == nil {
+			t.Errorf("err should not be nil")
+		}
 	})
 
 	t.Run("test useCertificate with no mode set", func(t *testing.T) {
@@ -76,6 +83,10 @@ func Test_useCertificate(t *testing.T) {
 	})
 
 	t.Run("test wrapCert", func(t *testing.T) {
-
+		_, err := wrapCert(nil)(nil)
+		if err != nil {
+			t.Errorf("could not wrapCert: %s", err)
+			return
+		}
 	})
 }

@@ -135,23 +135,27 @@ func Test_loadTLSKeyPair(t *testing.T) {
 	})
 }
 
-//func TestUseACME(t *testing.T) {
-//	t.Run("EmptyEnv_ShouldFail", func(t *testing.T) {
-//		// Backup and clear environment variable
-//		oldEnv := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
-//		defer os.Setenv("WEDDING_SERVICE_HOSTNAMES", oldEnv)
-//		os.Unsetenv("WEDDING_SERVICE_HOSTNAMES")
-//
-//		_, err := UseAcme()
-//		if err == nil {
-//			t.Fatal("expected error for empty WEDDING_SERVICE_HOSTNAMES, got nil")
-//		}
-//		expected := "hostnames must not be empty"
-//		if !strings.Contains(err.Error(), expected) {
-//			t.Errorf("unexpected error: got %q, want substring %q", err.Error(), expected)
-//		}
-//	})
-//
+func TestUseACME(t *testing.T) {
+	env.Init()
+	_, err := UseAcme()
+	if err != nil {
+		t.Errorf("could not UseAcme: %s", err)
+		return
+	}
+
+	t.Run("EmptyEnv_ShouldFail", func(t *testing.T) {
+		defer env.Reset()
+
+		env.Env.Hostnames = nil
+
+		// Backup and clear environment variable
+		_, err := UseAcme()
+		if err == nil {
+			t.Errorf("error is nil")
+		}
+	})
+}
+
 //	t.Run("ValidEnv_ShouldInitializeManager", func(t *testing.T) {
 //		// Backup and set valid environment
 //		oldEnv := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
