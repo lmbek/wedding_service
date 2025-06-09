@@ -55,7 +55,7 @@ func loadTLSKeyPair(cert []byte, key []byte) (*tls.Certificate, error) {
 // UseAcme initializes the autocert.Manager for managing certificates.
 func UseAcme() (acmeManager *autocert.Manager, err error) {
 	hostnames := env.Env.Hostnames
-	if hostnames == nil && len(hostnames) >= 1 {
+	if hostnames == nil || len(hostnames) == 0 {
 		return nil, errors.New("hostnames must not be empty, should have format: domain:alias,alias2|domain2:alias3")
 	}
 
