@@ -36,8 +36,8 @@ func TestInit(t *testing.T) {
 	if !reflect.DeepEqual(Env.Hostnames, expected) {
 		t.Errorf("Expected hostnames to be '%s', got '%s'", expected, Env.Hostnames)
 	}
-	if Env.CertificatePath != "./certificate/localhost_wedding_service.crt" {
-		t.Errorf("Expected CertificatePath to be './certificate/localhost_wedding_service.crt', got '%s'", Env.CertificatePath)
+	if Env.CertPath != "./certificate/localhost_wedding_service.crt" {
+		t.Errorf("Expected CertificatePath to be './certificate/localhost_wedding_service.crt', got '%s'", Env.CertPath)
 	}
 	if Env.KeyPath != "./certificate/localhost_wedding_service.key" {
 		t.Errorf("Expected KeyPath to be './certificate/localhost_wedding_service.key', got '%s'", Env.KeyPath)
