@@ -2,6 +2,7 @@ package env
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -12,6 +13,10 @@ func TestInit(t *testing.T) {
 	_ = os.Setenv("DEBUG", "3")
 	_ = os.Setenv("MODE", "Development")
 	_ = os.Setenv("WEDDING_SERVICE_HTTP_PORT", "8080")
+	_ = os.Setenv("WEDDING_SERVICE_HTTPS_PORT", "8443")
+	_ = os.Setenv("WEDDING_SERVICE_HOSTNAMES", "example.com:www.example.com,www2.example.com|example2.com:www.example2.com")
+	_ = os.Setenv("LOCALHOST_CERT", "./certificate/localhost_wedding_service.crt")
+	_ = os.Setenv("LOCALHOST_KEY", "./certificate/localhost_wedding_service.key")
 
 	Init()
 
@@ -24,8 +29,18 @@ func TestInit(t *testing.T) {
 	if Env.HttpPort != "8080" {
 		t.Errorf("Expected HttpPort to be '8080', got '%s'", Env.HttpPort)
 	}
-	if Env.HttpsPort != "8080" {
-		t.Errorf("Expected HttpsPort to be '8080', got '%s'", Env.HttpsPort)
+	if Env.HttpsPort != "8443" {
+		t.Errorf("Expected HttpsPort to be '8443', got '%s'", Env.HttpsPort)
+	}
+	expected := readHostnames("example.com:www.example.com,www2.example.com|example2.com:www.example2.com")
+	if !reflect.DeepEqual(Env.Hostnames, expected) {
+		t.Errorf("Expected hostnames to be '%s', got '%s'", expected, Env.Hostnames)
+	}
+	if Env.CertificatePath != "./certificate/localhost_wedding_service.crt" {
+		t.Errorf("Expected CertificatePath to be './certificate/localhost_wedding_service.crt', got '%s'", Env.CertificatePath)
+	}
+	if Env.KeyPath != "./certificate/localhost_wedding_service.key" {
+		t.Errorf("Expected KeyPath to be './certificate/localhost_wedding_service.key', got '%s'", Env.KeyPath)
 	}
 }
 
@@ -160,5 +175,17 @@ func TestConvertEnvToInt(t *testing.T) {
 
 	if got := convertEnvToInt("invalid"); got != -1 {
 		t.Errorf("Expected -1 for invalid input, got %d", got)
+	}
+}
+
+func TestReadHostnames(t *testing.T) {
+	expected := map[string][]string{
+		"example.com":  {"www.example.com", "www2.example.com"},
+		"example2.com": {"www.example2.com"},
+	}
+
+	result := readHostnames("example.com:www.example.com,www2.example.com|example2.com:www.example2.com")
+	if !reflect.DeepEqual(expected, result) {
+		t.Errorf("Expected hostnames to be '%s', got '%s'", expected, result)
 	}
 }
