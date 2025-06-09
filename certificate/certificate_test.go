@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 	"wedding_service/env"
 )
 
@@ -243,4 +244,14 @@ func createTempFile(t *testing.T, pattern string, content []byte) string {
 	}
 
 	return f.Name()
+}
+
+func Test_handleRetryBackoff(t *testing.T) {
+	for n := 0; n <= 10; n++ { // Test a few values to verify exponential backoff
+		expected := time.Duration(1<<n) * time.Second
+		actual := handleRetryBackoff(n, nil, nil)
+		if actual != expected {
+			t.Errorf("handleRetryBackoff(%d) = %v; want %v", n, actual, expected)
+		}
+	}
 }
