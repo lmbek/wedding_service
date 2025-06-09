@@ -15,8 +15,8 @@ func TestInit(t *testing.T) {
 	_ = os.Setenv("WEDDING_SERVICE_HTTP_PORT", "8080")
 	_ = os.Setenv("WEDDING_SERVICE_HTTPS_PORT", "8443")
 	_ = os.Setenv("WEDDING_SERVICE_HOSTNAMES", "example.com:www.example.com,www2.example.com|example2.com:www.example2.com")
-	_ = os.Setenv("LOCALHOST_CERT", "./certificate/localhost_wedding_service.crt")
-	_ = os.Setenv("LOCALHOST_KEY", "./certificate/localhost_wedding_service.key")
+	_ = os.Setenv("SELF_SIGNED_CERT_PATH", "./certificate/localhost_wedding_service.crt")
+	_ = os.Setenv("SELF_SIGNED_KEY_PATH", "./certificate/localhost_wedding_service.key")
 
 	Init()
 
