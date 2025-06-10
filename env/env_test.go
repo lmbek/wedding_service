@@ -7,8 +7,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	defer Reset()
 
 	_ = os.Setenv("DEBUG", "3")
 	_ = os.Setenv("MODE", "Development")
@@ -49,8 +48,8 @@ func TestReset(t *testing.T) {
 }
 
 func TestIsDebugInfoEnabled(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{DebugLevel: Info}
 	if !IsDebugInfoEnabled() {
@@ -69,8 +68,8 @@ func TestIsDebugInfoEnabled(t *testing.T) {
 }
 
 func TestIsDebugWarningsEnabled(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{DebugLevel: Warning}
 	if !IsDebugWarningsEnabled() {
@@ -89,8 +88,8 @@ func TestIsDebugWarningsEnabled(t *testing.T) {
 }
 
 func TestIsDebugErrorsEnabled(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{DebugLevel: Error}
 	if !IsDebugErrorsEnabled() {
@@ -109,8 +108,8 @@ func TestIsDebugErrorsEnabled(t *testing.T) {
 }
 
 func TestIsDebugDisabled(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{DebugLevel: None}
 	if !IsDebugDisabled() {
@@ -124,8 +123,8 @@ func TestIsDebugDisabled(t *testing.T) {
 }
 
 func TestIsModeDevelopment(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{Mode: "development"}
 	if !IsModeDevelopment() {
@@ -139,8 +138,8 @@ func TestIsModeDevelopment(t *testing.T) {
 }
 
 func TestIsModeProduction(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{Mode: "production"}
 	if !IsModeProduction() {
@@ -154,8 +153,8 @@ func TestIsModeProduction(t *testing.T) {
 }
 
 func TestIsModeNotSet(t *testing.T) {
-	oldEnv := Env
-	defer func() { Env = oldEnv }()
+	Init()
+	defer Reset()
 
 	Env = &environment{Mode: ""}
 	if !IsModeNotSet() {
