@@ -2,7 +2,6 @@ package webserver
 
 import (
 	"net"
-	"os"
 	"testing"
 	"time"
 	"wedding_service/env"
@@ -46,9 +45,10 @@ func TestWebserver_ListenAndServe(t *testing.T) {
 }
 
 func TestWebserver_listenHTTPS(t *testing.T) {
+	env.Init()
+
 	t.Run("test listenHTTPS", func(t *testing.T) {
 		t.Chdir("..")
-		env.Init()
 		defer env.Reset()
 
 		ws, _ := NewWebserver()
@@ -67,10 +67,7 @@ func TestWebserver_listenHTTPS(t *testing.T) {
 
 	t.Run("test httpsServer.ListenAndServeTLS error", func(t *testing.T) {
 		t.Chdir("..")
-		oldEnv := env.Env
-		defer func() { env.Env = oldEnv }()
-		os.Setenv("WEDDING_SERVICE_HTTPS_PORT", "8443")
-		env.Init()
+		env.Env.HttpsPort = "8443"
 		defer env.Reset()
 
 		// occupy the server
@@ -90,9 +87,10 @@ func TestWebserver_listenHTTPS(t *testing.T) {
 }
 
 func TestWebserver_listenHTTP(t *testing.T) {
+	env.Init()
+
 	t.Run("test listenHTTP", func(t *testing.T) {
 		t.Chdir("..")
-		env.Init()
 		defer env.Reset()
 
 		ws, _ := NewWebserver()
@@ -111,10 +109,7 @@ func TestWebserver_listenHTTP(t *testing.T) {
 
 	t.Run("test httpServer.ListenAndServe error", func(t *testing.T) {
 		t.Chdir("..")
-		oldEnv := env.Env
-		defer func() { env.Env = oldEnv }()
-		os.Setenv("WEDDING_SERVICE_HTTP_PORT", "8080")
-		env.Init()
+		env.Env.HttpPort = "8080"
 		defer env.Reset()
 
 		// occupy the server
