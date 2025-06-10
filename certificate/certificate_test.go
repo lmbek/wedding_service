@@ -98,10 +98,6 @@ func TestUseSelfSigned(t *testing.T) {
 		}
 		defer tempKey.Close()
 
-		// Write invalid contents to simulate broken cert/key
-		//tempCert.WriteString("not a real cert")
-		//tempKey.WriteString("not a real key")
-
 		// Update the env to point to the files
 		env.Env.CertPath = tempCert.Name()
 		env.Env.KeyPath = tempKey.Name()
@@ -156,80 +152,6 @@ func TestUseACME(t *testing.T) {
 		}
 	})
 }
-
-//	t.Run("ValidEnv_ShouldInitializeManager", func(t *testing.T) {
-//		// Backup and set valid environment
-//		oldEnv := os.Getenv("WEDDING_SERVICE_HOSTNAMES")
-//		defer os.Setenv("WEDDING_SERVICE_HOSTNAMES", oldEnv)
-//		os.Setenv("WEDDING_SERVICE_HOSTNAMES", "example.com:www.example.com,api.example.com|test.com:dev.test.com")
-//
-//		acmeManager, err := UseAcme()
-//		if err != nil {
-//			t.Fatalf("UseAcme failed: %v", err)
-//		}
-//		if acmeManager == nil {
-//			t.Fatal("expected non-nil autocert.Manager")
-//		}
-//
-//		t.Run("HostPolicy_Domain", func(t *testing.T) {
-//			tests := []struct {
-//				name       string
-//				host       string
-//				shouldFail bool
-//			}{
-//				{"example.com allowed", "example.com", false},
-//				{"test.com allowed", "test.com", false},
-//				{"unauthorized.com denied", "unauthorized.com", true},
-//				{"another.com denied", "another.com", true},
-//			}
-//			for _, tt := range tests {
-//				t.Run(tt.name, func(t *testing.T) {
-//					err := acmeManager.HostPolicy(context.Background(), tt.host)
-//					if tt.shouldFail && err == nil {
-//						t.Errorf("expected error for host %q, got nil", tt.host)
-//					}
-//					if !tt.shouldFail && err != nil {
-//						t.Errorf("unexpected error for host %q: %v", tt.host, err)
-//					}
-//				})
-//			}
-//		})
-//
-//		t.Run("HostPolicy_DomainAliases", func(t *testing.T) {
-//			tests := []struct {
-//				name       string
-//				host       string
-//				shouldFail bool
-//			}{
-//				{"www.example.com allowed", "www.example.com", false},
-//				{"api.example.com allowed", "api.example.com", false},
-//				{"dev.test.com allowed", "dev.test.com", false},
-//				{"invalid.example.com denied", "invalid.example.com", true},
-//			}
-//			for _, tt := range tests {
-//				t.Run(tt.name, func(t *testing.T) {
-//					err := acmeManager.HostPolicy(context.Background(), tt.host)
-//					if tt.shouldFail && err == nil {
-//						t.Errorf("expected error for alias host %q, got nil", tt.host)
-//					}
-//					if !tt.shouldFail && err != nil {
-//						t.Errorf("unexpected error for alias host %q: %v", tt.host, err)
-//					}
-//				})
-//			}
-//		})
-//
-//		t.Run("Client_RetryBackoff", func(t *testing.T) {
-//			for n := 0; n <= 4; n++ {
-//				expected := time.Duration(1<<n) * time.Second
-//				actual := acmeManager.Client.RetryBackoff(n, nil, nil)
-//				if actual != expected {
-//					t.Errorf("retry backoff failed at attempt %d: got %v, want %v", n, actual, expected)
-//				}
-//			}
-//		})
-//	})
-//}
 
 func createTempFile(t *testing.T, pattern string, content []byte) string {
 	t.Helper()
