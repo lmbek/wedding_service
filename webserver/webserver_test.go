@@ -49,6 +49,7 @@ func TestWebserver_listenHTTPS(t *testing.T) {
 
 	t.Run("test listenHTTPS", func(t *testing.T) {
 		t.Chdir("..")
+		env.Env.HttpsPort = "8443"
 		defer env.Reset()
 
 		ws, _ := NewWebserver()
@@ -91,6 +92,7 @@ func TestWebserver_listenHTTP(t *testing.T) {
 
 	t.Run("test listenHTTP", func(t *testing.T) {
 		t.Chdir("..")
+		env.Env.HttpPort = "8080"
 		defer env.Reset()
 
 		ws, _ := NewWebserver()
