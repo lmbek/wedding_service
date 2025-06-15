@@ -90,6 +90,8 @@ func Test_createWebserver(t *testing.T) {
 }
 
 func Test_startWebserver(t *testing.T) {
+	env.Init()
+	defer env.Reset()
 	w, err := webserver.NewWebserver()
 	if err != nil {
 		t.Errorf("could not create new webserver: %s", err)
