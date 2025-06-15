@@ -1,21 +1,44 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
+	"log"
+	"wedding_service/env"
 	"wedding_service/webserver"
 )
 
-var httpServer = &http.Server{Addr: fmt.Sprintf("localhost:%s", os.Getenv("WEDDING_SERVICE_HTTP_PORT"))}
-var httpsServer = &http.Server{Addr: fmt.Sprintf("localhost:%s", os.Getenv("WEDDING_SERVICE_HTTPS_PORT"))}
+var mainWebserver webserver.Webserver
 
 func main() {
-	start()
+	_ = initEnv()
+	mainWebserver, _ = createWebserver()
+	startWebserver(mainWebserver)
 }
 
-func start() error {
-	// TODO - less parameters
-	return webserver.Start(httpServer, httpsServer, filepath.Join("certificate", os.Getenv("LOCALHOST_CERT")), filepath.Join("certificate", os.Getenv("LOCALHOST_KEY")))
+func initEnv() error {
+	err := env.Init()
+	if err != nil {
+		log.Printf("could not initEnv in main: %s\n", err)
+		return err
+	}
+	return nil
+}
+
+func createWebserver() (webserver.Webserver, error) {
+	w, err := webserver.NewWebserver()
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	return w, nil
+}
+
+func startWebserver(w webserver.Webserver) error {
+	err := w.ListenAndServe()
+	if err != nil {
+		log.Printf("%s", err)
+		return err
+	}
+
+	return nil
 }

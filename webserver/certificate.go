@@ -1,0 +1,38 @@
+package webserver
+
+import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"net/http"
+	"wedding_service/certificate"
+	"wedding_service/env"
+)
+
+func useCertificate(httpsServer *http.Server, certPath string, keyPath string) error {
+	if env.IsModeNotSet() {
+		return errors.New("no MODE set in .env")
+	}
+
+	if env.IsModeProduction() {
+		acmeManager, err := certificate.UseAcme()
+		if err != nil {
+			return fmt.Errorf("could not use acme manager: %w", err)
+		}
+		httpsServer.TLSConfig.GetCertificate = acmeManager.GetCertificate
+		return nil
+	}
+
+	cert, err := certificate.UseSelfSigned(certPath, keyPath)
+	if err != nil {
+		return fmt.Errorf("could not use localhost certificate: %w", err)
+	}
+	httpsServer.TLSConfig.GetCertificate = wrapCert(cert)
+	return nil
+}
+
+func wrapCert(cert *tls.Certificate) func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	return func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+		return cert, nil
+	}
+}

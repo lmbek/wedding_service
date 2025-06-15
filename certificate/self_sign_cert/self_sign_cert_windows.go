@@ -1,4 +1,17 @@
-//go:build self_sign_cert
+//go:build windows && self_sign_cert
+
+// READ THIS FIRST:
+// create the certificate and key files for localhost first!
+// You need to generate self-signed certificates
+// by running go generate
+
+//// go:generate go run ./self_sign_cert/self_sign_cert.go
+//go:generate go run self_sign_cert_windows.go
+
+//////
+
+// NOTE: this file is ignored by the default build
+// as it is a tool, we don't count this file in our test coverage total
 
 package main
 
@@ -129,7 +142,7 @@ func generateSelfSignedCertificate(orgNames []string, dnsNames []string) ([]byte
 	// Generate ECDSA private key (P-256 curve)
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate ECDSA private key: %v", err)
+		return nil, nil, fmt.Errorf("failed to generate ECDSA private key: %w", err)
 	}
 
 	// Create certificate template
@@ -151,7 +164,7 @@ func generateSelfSignedCertificate(orgNames []string, dnsNames []string) ([]byte
 	// Self-sign the certificate using ECDSA private key
 	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create certificate: %v", err)
+		return nil, nil, fmt.Errorf("failed to create certificate: %w", err)
 	}
 
 	key, err := x509.MarshalECPrivateKey(priv)
@@ -171,19 +184,19 @@ func loadTLSConfig(certFileName, keyFileName string) error {
 	// Load the certificate
 	certPEM, err := os.ReadFile(certFileName)
 	if err != nil {
-		return fmt.Errorf("failed to read certificate file: %v", err)
+		return fmt.Errorf("failed to read certificate file: %w", err)
 	}
 
 	// Load the private key
 	keyPEM, err := os.ReadFile(keyFileName)
 	if err != nil {
-		return fmt.Errorf("failed to read key file: %v", err)
+		return fmt.Errorf("failed to read key file: %w", err)
 	}
 
 	// Parse the certificate and key
 	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
-		return fmt.Errorf("failed to parse certificate and key: %v", err)
+		return fmt.Errorf("failed to parse certificate and key: %w", err)
 	}
 
 	// Create a TLS config with the loaded certificate
@@ -224,7 +237,7 @@ func AddCertificateToWindowsCAStore(certName string, orgNames []string, certPEM 
 	))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to add certificate to Windows CA store: %v, output: %s", err, string(output))
+		return fmt.Errorf("failed to add certificate to Windows CA store: %w, output: %s", err, string(output))
 	}
 
 	return nil
@@ -246,7 +259,7 @@ func RemoveCertificateFromCurrentUser(orgNames []string) error {
 
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to remove certificate for '%s' from CurrentUser CA store: %v, output: %s", org, err, string(output))
+			return fmt.Errorf("failed to remove certificate for '%s' from CurrentUser CA store: %w, output: %s", org, err, string(output))
 		}
 	}
 	return nil
@@ -264,7 +277,7 @@ func moveOldCertificates(certDir, oldCertDir string) error {
 	// List files in the certificate directory
 	files, err := os.ReadDir(certDir)
 	if err != nil {
-		return fmt.Errorf("failed to read certificate directory: %v", err)
+		return fmt.Errorf("failed to read certificate directory: %w", err)
 	}
 
 	// Move each file to the 'old' directory
@@ -286,7 +299,7 @@ func moveOldCertificates(certDir, oldCertDir string) error {
 			// Move the file
 			err := os.Rename(sourceFilePath, destFilePath)
 			if err != nil {
-				return fmt.Errorf("failed to move file '%s' to '%s': %v", sourceFilePath, destFilePath, err)
+				return fmt.Errorf("failed to move file '%s' to '%s': %w", sourceFilePath, destFilePath, err)
 			}
 		}
 	}
@@ -294,7 +307,7 @@ func moveOldCertificates(certDir, oldCertDir string) error {
 	// Check if the 'old' folder has more than 100 files
 	oldFiles, err := os.ReadDir(oldCertDir)
 	if err != nil {
-		return fmt.Errorf("failed to read old certificate directory: %v", err)
+		return fmt.Errorf("failed to read old certificate directory: %w", err)
 	}
 
 	if len(oldFiles) > 100 {
@@ -316,7 +329,7 @@ func moveOldCertificates(certDir, oldCertDir string) error {
 		// Delete the oldest file
 		err := os.Remove(oldestFilePath)
 		if err != nil {
-			return fmt.Errorf("failed to delete oldest file '%s': %v", oldestFilePath, err)
+			return fmt.Errorf("failed to delete oldest file '%s': %w", oldestFilePath, err)
 		}
 		log.Printf("Deleted the oldest file: %s", oldestFilePath)
 	}

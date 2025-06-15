@@ -1,8 +1,17 @@
-//go:build self_sign_cert
+//go:build !windows && self_sign_cert
+
+// READ THIS FIRST:
+// create the certificate and key files for localhost first!
+// You need to generate self-signed certificates
+// by running go generate
+
+//// go:generate go run ./self_sign_cert/self_sign_cert.go
+//go:generate go run self_sign_cert.go
+
+//////
 
 // NOTE: this file is ignored by the default build
-// the test coverage of this tool is 67.9%
-// as it is a tool, we don't count this test coverage in our total
+// as it is a tool, we don't count this file in our test coverage total
 
 package main
 
@@ -62,7 +71,7 @@ func generateSelfSignedCertificatePEM() ([]byte, []byte, error) {
 	// Generate private key (RSA in this case)
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate private key: %v", err)
+		return nil, nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	// Create certificate template
@@ -85,7 +94,7 @@ func generateSelfSignedCertificatePEM() ([]byte, []byte, error) {
 	// Self-sign the certificate
 	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create certificate: %v", err)
+		return nil, nil, fmt.Errorf("failed to create certificate: %w", err)
 	}
 
 	// PEM encode the certificate and private key

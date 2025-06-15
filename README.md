@@ -45,6 +45,11 @@ Run `make test` to execute all tests (`go test ./...`).
 
 Please note that testing only involves testing the go service (without integration to sql etc.)
 
+### Run test coverage (and show in browser)
+
+Run `make test-coverage-html` to execute all tests and show test coverage.
+
+
 ### Run benchmarks
 
 Run `make bench` to execute benchmarks (`go test -bench=.`).

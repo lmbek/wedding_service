@@ -4,38 +4,82 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"wedding_service/env"
 )
 
-func Start(httpServer *http.Server, httpsServer *http.Server, certPath string, keyPath string) error {
-	err := setupHttpsServer(httpsServer, certPath, keyPath)
-	if err != nil {
-		return err
-	}
-
-	return ListenAndServe(httpServer, httpsServer)
+type Webserver interface {
+	ListenAndServe() error
+	Close() error
 }
 
-func ListenAndServe(httpServer *http.Server, httpsServer *http.Server) error {
-	errChannel := make(chan error, 2)
+type webserver struct {
+	httpServer  *http.Server
+	httpsServer *http.Server
+	certPath    string
+	keyPath     string
+}
+
+func NewWebserver() (w Webserver, err error) {
+	var httpServer *http.Server = newHttpServer(env.Env.HttpPort)
+	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
+
+	// use certificate for https/tls
+	err = useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &webserver{
+		httpServer:  httpServer,
+		httpsServer: httpsServer,
+	}, nil
+}
+
+func (w *webserver) ListenAndServe() error {
+	errChan := make(chan error, 2)
 
 	go func() {
-		fmt.Println("Listening on http://" + httpServer.Addr)
-		err := httpServer.ListenAndServe()
-		errChannel <- err
+		errChan <- w.listenHTTPS()
 	}()
 
 	go func() {
-		fmt.Println("Listening on https://" + httpsServer.Addr)
-		err := httpsServer.ListenAndServeTLS("", "")
-		errChannel <- err
+		errChan <- w.listenHTTP()
 	}()
 
-	for i := 0; i < 2; i++ {
-		err := <-errChannel
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
+	return <-errChan
+}
+
+func (w *webserver) listenHTTPS() error {
+	if env.IsDebugInfoEnabled() && env.IsModeDevelopment() {
+		fmt.Println("Listening on", fmt.Sprintf("https://localhost:%s", env.Env.HttpsPort))
+	}
+
+	// Listen and serve HTTPS / TLS
+	err := w.httpsServer.ListenAndServeTLS("", "")
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("HTTPS server error: %w", err)
 	}
 
 	return nil
+}
+
+func (w *webserver) listenHTTP() error {
+	if env.IsDebugInfoEnabled() && env.IsModeDevelopment() {
+		fmt.Println("Listening on", fmt.Sprintf("http://localhost:%s", env.Env.HttpPort))
+	}
+
+	// Listen and serve HTTP
+	err := w.httpServer.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("HTTP server error: %w", err)
+	}
+
+	return nil
+}
+
+func (w *webserver) Close() error {
+	errClosingHttps := w.httpsServer.Close()
+	errClosingHttp := w.httpServer.Close()
+
+	return errors.Join(errClosingHttp, errClosingHttps)
 }

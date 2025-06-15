@@ -5,7 +5,10 @@
 .env
 docker-volumes
 coverage.out
+*.prof
 *.crt
 *.key
 *.exe
-*.pem 
+*.pem
+*.out
+wedding-go-service

@@ -8,12 +8,18 @@ services:
         volumes:
             - ./docker-volumes/main-service-files:/app
         ports:
-            - "80:${WEDDING_SERVICE_HTTP_PORT}"
-            - "443:${WEDDING_SERVICE_HTTPS_PORT}"
-        env_file:
-            - .env
+            - "${WEDDING_SERVICE_HTTP_PORT}:${WEDDING_SERVICE_HTTP_PORT}"
+            - "${WEDDING_SERVICE_HTTPS_PORT}:${WEDDING_SERVICE_HTTPS_PORT}"
+        #env_file:
+        #    - .env
+        environment:
+            - GOOS=linux
+            - GOARCH=amd64
+            - MODE=docker-dev
         working_dir: /app
-        command: ./${WEDDING_SERVICE_HOSTNAME}
+        command: ./${APP_NAME}
+        networks:
+            - wedding-network
 
     wedding-mysql-service: # mysql
         container_name:  wedding-mysql-service
@@ -21,7 +27,27 @@ services:
         restart: no
         volumes:
             - ./docker-volumes/mysql-data:/var/lib/mysql
-        ports:
-            - "3306:${MYSQL_SERVICE_HTTP_PORT}"
         env_file:
             - .env
+        ports:
+            - "${MYSQL_SERVICE_HTTP_PORT}:${MYSQL_SERVICE_HTTP_PORT}"
+        networks:
+            - wedding-network
+    wedding-prometheus:
+        container_name: wedding-prometheus
+        image: prom/prometheus:latest
+        restart: no
+        ports:
+            - "9090:9090"
+        networks:
+            - wedding-network
+    wedding-grafana:
+        container_name: wedding-grafana
+        image: grafana/grafana:latest
+        restart: no
+        ports:
+            - "3000:3000"
+        networks:
+            - wedding-network
+networks:
+    wedding-network:
