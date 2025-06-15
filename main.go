@@ -17,7 +17,7 @@ func main() {
 func initEnv() error {
 	err := env.Init()
 	if err != nil {
-		log.Printf("%s\n", err)
+		log.Printf("could not initEnv in main: %s\n", err)
 		return err
 	}
 	return nil
