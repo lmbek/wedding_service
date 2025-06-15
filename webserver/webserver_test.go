@@ -68,8 +68,8 @@ func TestWebserver_listenHTTPS(t *testing.T) {
 
 	t.Run("test httpsServer.ListenAndServeTLS error", func(t *testing.T) {
 		t.Chdir("..")
-		env.Env.HttpsPort = "8443"
 		defer env.Reset()
+		env.Env.HttpsPort = "8443"
 
 		// occupy the server
 		ln, _ := net.Listen("tcp", ":8443")
