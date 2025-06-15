@@ -37,7 +37,7 @@ func TestWebserver_ListenAndServe(t *testing.T) {
 
 	go func() {
 		defer w.Close()
-		couldRequest := requestWebserver(t, 0)
+		couldRequest := waitForWebserverGetResponse(t, 0)
 		if !couldRequest {
 			t.Errorf("could not request webserver withing allowed time")
 		}
@@ -124,7 +124,7 @@ func createNewWebserver(t *testing.T) *webserver {
 	return w
 }
 
-func requestWebserver(t *testing.T, retryNr int) bool {
+func waitForWebserverGetResponse(t *testing.T, retryNr int) bool {
 	client := &http.Client{}
 
 	addr := "http://localhost:" + env.Env.HttpPort
@@ -134,7 +134,7 @@ func requestWebserver(t *testing.T, retryNr int) bool {
 		if retryNr < 5000 {
 			time.Sleep(1 * time.Millisecond)
 			retryNr++
-			return requestWebserver(t, retryNr) // <-- FIX: return the recursive call result
+			return waitForWebserverGetResponse(t, retryNr) // <-- FIX: return the recursive call result
 		}
 		t.Errorf("Request failed after %d milliseconds full of retries: %s", retryNr, err)
 		return false

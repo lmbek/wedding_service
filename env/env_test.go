@@ -47,11 +47,11 @@ func TestInit(t *testing.T) {
 	}
 
 	t.Run("test with invalid .env path", func(t *testing.T) {
-		originalEnvPath := envPath
+		originalEnvPath := EnvPath
 		defer func() {
-			envPath = originalEnvPath
+			EnvPath = originalEnvPath
 		}()
-		envPath = "invalid file path"
+		EnvPath = "invalid file path"
 		err = Init()
 		if err == nil {
 			t.Errorf("err should not be nil: %s", err)

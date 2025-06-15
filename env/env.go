@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var envPath = ".env"
+var EnvPath = ".env"
 var Env *environment
 
 type environment struct {
@@ -22,7 +22,7 @@ type environment struct {
 }
 
 func Init() error {
-	err := godotenv.Load(envPath)
+	err := godotenv.Load(EnvPath) // Note: doc says it will not overwrite env vars that already exists, this might give issues
 	if err != nil {
 		return fmt.Errorf("err loading .env file: %s", err)
 	}
