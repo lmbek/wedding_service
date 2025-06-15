@@ -4,6 +4,7 @@
 package certificate
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -166,6 +167,41 @@ func createTempFile(t *testing.T, pattern string, content []byte) string {
 	}
 
 	return f.Name()
+}
+
+func TestHandleHostPolicy(t *testing.T) {
+	domainAliases := map[string][]string{
+		"example.com":   {"www.example.com", "api.example.com"},
+		"another.com":   {"www.another.com"},
+		"onlydomain.dk": {},
+	}
+
+	policy := handleHostPolicy(domainAliases)
+
+	testCases := []struct {
+		name        string
+		host        string
+		expectError bool
+	}{
+		{"exact match domain", "example.com", false},
+		{"match alias", "www.example.com", false},
+		{"another domain match", "another.com", false},
+		{"another alias match", "www.another.com", false},
+		{"no match at all", "unknown.com", true},
+		{"match domain with no aliases", "onlydomain.dk", false},
+		{"empty host", "", true},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := policy(context.Background(), testCase.host)
+			if testCase.expectError && err == nil {
+				t.Errorf("expected error for host %q but got none", testCase.host)
+			} else if !testCase.expectError && err != nil {
+				t.Errorf("unexpected error for host %q: %v", testCase.host, err)
+			}
+		})
+	}
 }
 
 func Test_handleRetryBackoff(t *testing.T) {
