@@ -9,6 +9,7 @@ import (
 
 func newHttpsServer(port string) *http.Server {
 	var addr string
+
 	if env.IsModeDevelopment() {
 		addr = fmt.Sprintf("localhost:%s", port)
 	} else {
