@@ -10,8 +10,11 @@ services:
         ports:
             - "80:${WEDDING_SERVICE_HTTP_PORT}"
             - "443:${WEDDING_SERVICE_HTTPS_PORT}"
-        env_file:
-            - .env
+        #env_file:
+        #    - .env
+        environment:
+            - GOOS=linux
+            - GOARCH=amd64
         working_dir: /app
         command: ./${APP_NAME}
         networks:
