@@ -10,12 +10,8 @@ import (
 )
 
 func useCertificate(httpsServer *http.Server, certPath string, keyPath string) error {
-	if env.IsModeDevelopment() {
-		cert, err := certificate.UseSelfSigned(certPath, keyPath)
-		if err != nil {
-			return fmt.Errorf("could not use localhost certificate: %w", err)
-		}
-		httpsServer.TLSConfig.GetCertificate = wrapCert(cert)
+	if env.IsModeNotSet() {
+		return errors.New("no MODE set in .env")
 	}
 
 	if env.IsModeProduction() {
@@ -24,12 +20,14 @@ func useCertificate(httpsServer *http.Server, certPath string, keyPath string) e
 			return fmt.Errorf("could not use acme manager: %w", err)
 		}
 		httpsServer.TLSConfig.GetCertificate = acmeManager.GetCertificate
+		return nil
 	}
 
-	if env.IsModeNotSet() {
-		return errors.New("no MODE set in .env")
+	cert, err := certificate.UseSelfSigned(certPath, keyPath)
+	if err != nil {
+		return fmt.Errorf("could not use localhost certificate: %w", err)
 	}
-
+	httpsServer.TLSConfig.GetCertificate = wrapCert(cert)
 	return nil
 }
 

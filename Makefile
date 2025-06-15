@@ -5,7 +5,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # Default: clean, build, and run containers as daemon
-all: docker-stop rm-executable go-build run-as-daemon
+all: docker-stop rm-executable go-build-for-docker run-as-daemon
 
 generate: go-generate
 
@@ -26,16 +26,24 @@ rm-executable:
 	rm -f $(BUILD_DIR)/$(APP_NAME)
 	@echo
 
+build: go-build
+
 go-build:
+	@echo "Go building..."
+	@echo "Building $(APP_NAME)"
+	CGO_ENABLED=0 go build -o $(APP_NAME) .
+	@echo
+
+go-build-for-docker:
 	@echo "Copying dependencies..."
-	# TODO: check if mkdir can generate a directory with a directory inside of it
 	mkdir -p $(BUILD_DIR)/certificate/self_sign_cert/
 	cp $(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
 	cp $(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
+	cp .env $(BUILD_DIR)/.env
 	@echo
 
 	@echo "Building $(APP_NAME)"
-	CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
 go-build-for-github:

@@ -79,6 +79,10 @@ func IsModeDevelopment() bool {
 	return Env.Mode == "development"
 }
 
+func IsModeDockerDevelopment() bool {
+	return Env.Mode == "docker-dev"
+}
+
 func IsModeProduction() bool {
 	return Env.Mode == "production"
 }

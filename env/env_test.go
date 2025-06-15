@@ -159,6 +159,22 @@ func TestIsModeDevelopment(t *testing.T) {
 	}
 }
 
+func TestIsModeDockerDevelopment(t *testing.T) {
+	t.Chdir("..")
+	Init()
+	defer Reset()
+
+	Env = &environment{Mode: "docker-dev"}
+	if !IsModeDockerDevelopment() {
+		t.Error("Expected IsModeDockerDevelopment to return true")
+	}
+
+	Env = &environment{Mode: "development"}
+	if IsModeDockerDevelopment() {
+		t.Error("Expected IsModeDevelopment to return false")
+	}
+}
+
 func TestIsModeProduction(t *testing.T) {
 	t.Chdir("..")
 	Init()
