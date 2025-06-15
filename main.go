@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"wedding_service/env"
 	"wedding_service/webserver"
@@ -10,40 +8,37 @@ import (
 
 var mainWebserver webserver.Webserver
 
-// main starts the program (ignore errors as they are already handled by the other functions in main package)
 func main() {
-	env.Init()
-	m, _ := initMainWebserver()
-	_ = start(m)
+	_ = initEnv()
+	mainWebserver, _ = createWebserver()
+	startWebserver(mainWebserver)
 }
 
-// start handles the eventual error internally and prints it (main should ignore the error)
-// testWebserver is used only for the tests, for normal use we should just give nil
-func start(w webserver.Webserver) (err error) {
-	if w == nil {
-		return errors.New("webserver is nil")
-	}
-
-	err = w.ListenAndServe()
+func initEnv() error {
+	err := env.Init()
 	if err != nil {
-		log.Printf("%s", fmt.Errorf("could not ListenAndServe: %w", err))
+		log.Printf("%s\n", err)
 		return err
 	}
 	return nil
 }
 
-func initMainWebserver() (webserver.Webserver, error) {
-	if mainWebserver != nil {
-		return mainWebserver, nil
-	}
-
-	m, err := webserver.NewWebserver()
+func createWebserver() (webserver.Webserver, error) {
+	w, err := webserver.NewWebserver()
 	if err != nil {
-		if env.IsDebugErrorsEnabled() {
-			log.Printf("%s", fmt.Errorf("could not create new webserver: %w", err))
-		}
+		log.Printf("%s", err)
 		return nil, err
 	}
-	mainWebserver = m
-	return mainWebserver, nil
+
+	return w, nil
+}
+
+func startWebserver(w webserver.Webserver) error {
+	err := w.ListenAndServe()
+	if err != nil {
+		log.Printf("%s", err)
+		return err
+	}
+
+	return nil
 }
