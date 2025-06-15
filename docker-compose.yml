@@ -14,6 +14,8 @@ services:
             - .env
         working_dir: /app
         command: ./${APP_NAME}
+        networks:
+            - wedding-network
 
     wedding-mysql-service: # mysql
         container_name:  wedding-mysql-service
@@ -25,3 +27,23 @@ services:
             - "3306:${MYSQL_SERVICE_HTTP_PORT}"
         env_file:
             - .env
+        networks:
+            - wedding-network
+    wedding-prometheus:
+        container_name: wedding-prometheus
+        image: prom/prometheus:latest
+        restart: no
+        ports:
+            - "9090:9090"
+        networks:
+            - wedding-network
+    wedding-grafana:
+        container_name: wedding-grafana
+        image: grafana/grafana:latest
+        restart: no
+        ports:
+            - "3000:3000"
+        networks:
+            - wedding-network
+networks:
+    wedding-network:
