@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var EnvPath = ".env"
@@ -21,7 +22,13 @@ type environment struct {
 	KeyPath    string
 }
 
+var mutex sync.RWMutex
+
 func Init() error {
+
+	// TODO: make a lock for all getters and setters, and then also test if godotenv in general has race conditions
+	mutex.Lock()
+	defer mutex.Unlock()
 	err := godotenv.Load(EnvPath) // Note: doc says it will not overwrite env vars that already exists, this might give issues
 	if err != nil {
 		return fmt.Errorf("err loading .env file: %s", err)
