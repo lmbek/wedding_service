@@ -7,6 +7,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
+	t.Chdir("..")
 	defer Reset()
 
 	_ = os.Setenv("DEBUG", "3")
@@ -17,7 +18,10 @@ func TestInit(t *testing.T) {
 	_ = os.Setenv("SELF_SIGNED_CERT_PATH", "./certificate/localhost_wedding_service.crt")
 	_ = os.Setenv("SELF_SIGNED_KEY_PATH", "./certificate/localhost_wedding_service.key")
 
-	Init()
+	err := Init()
+	if err != nil {
+		t.Errorf("%s", err)
+	}
 
 	if Env.DebugLevel != Info {
 		t.Errorf("Expected DebugLevel to be %d, got %d", Info, Env.DebugLevel)
@@ -41,13 +45,27 @@ func TestInit(t *testing.T) {
 	if Env.KeyPath != "./certificate/localhost_wedding_service.key" {
 		t.Errorf("Expected KeyPath to be './certificate/localhost_wedding_service.key', got '%s'", Env.KeyPath)
 	}
+
+	t.Run("test with invalid .env path", func(t *testing.T) {
+		originalEnvPath := envPath
+		defer func() {
+			envPath = originalEnvPath
+		}()
+		envPath = "invalid file path"
+		err = Init()
+		if err == nil {
+			t.Errorf("err should not be nil: %s", err)
+		}
+	})
 }
 
 func TestReset(t *testing.T) {
+	t.Chdir("..")
 	Reset()
 }
 
 func TestIsDebugInfoEnabled(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -68,6 +86,7 @@ func TestIsDebugInfoEnabled(t *testing.T) {
 }
 
 func TestIsDebugWarningsEnabled(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -88,6 +107,7 @@ func TestIsDebugWarningsEnabled(t *testing.T) {
 }
 
 func TestIsDebugErrorsEnabled(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -108,6 +128,7 @@ func TestIsDebugErrorsEnabled(t *testing.T) {
 }
 
 func TestIsDebugDisabled(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -123,6 +144,7 @@ func TestIsDebugDisabled(t *testing.T) {
 }
 
 func TestIsModeDevelopment(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -138,6 +160,7 @@ func TestIsModeDevelopment(t *testing.T) {
 }
 
 func TestIsModeProduction(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 
@@ -153,6 +176,7 @@ func TestIsModeProduction(t *testing.T) {
 }
 
 func TestIsModeNotSet(t *testing.T) {
+	t.Chdir("..")
 	Init()
 	defer Reset()
 

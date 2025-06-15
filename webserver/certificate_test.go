@@ -7,12 +7,12 @@ import (
 )
 
 func Test_useCertificate(t *testing.T) {
-	env.Init()
 	t.Chdir("..")
+	env.Init()
+
 	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
 
-	// test if our current mode in .env works
-	err := useCertificate(httpsServer)
+	err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 	if err != nil {
 		t.Errorf("could not useCertificate %s", err)
 	}
@@ -21,7 +21,7 @@ func Test_useCertificate(t *testing.T) {
 	t.Run("development mode set", func(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "development"
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err != nil {
 			t.Errorf("could not useCertificate for mode development: %s", err)
 		}
@@ -33,7 +33,7 @@ func Test_useCertificate(t *testing.T) {
 		env.Env.Mode = "development"
 		env.Env.CertPath = "invalid_cert_path"
 		env.Env.KeyPath = "invalid_key_path"
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err == nil {
 			t.Errorf("err should not be nil")
 		}
@@ -42,7 +42,7 @@ func Test_useCertificate(t *testing.T) {
 	t.Run("test useCertificate with production mode set", func(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "production"
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err != nil {
 			t.Errorf("could not useCertificate: %s", err)
 		}
@@ -51,7 +51,7 @@ func Test_useCertificate(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "production"
 		env.Env.Hostnames = nil
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err == nil {
 			t.Errorf("err should not be nil")
 		}
@@ -60,7 +60,7 @@ func Test_useCertificate(t *testing.T) {
 	t.Run("test useCertificate with no mode set", func(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = ""
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err == nil {
 			t.Errorf("err should not be nil")
 		}
@@ -70,7 +70,7 @@ func Test_useCertificate(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "development"
 		env.Env.CertPath = ""
-		err := useCertificate(httpsServer)
+		err := useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 		if err == nil {
 			t.Errorf("err should not be nil")
 		}

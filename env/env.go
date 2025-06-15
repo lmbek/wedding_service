@@ -2,11 +2,13 @@ package env
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"strings"
 )
 
+var envPath = ".env"
 var Env *environment
 
 type environment struct {
@@ -19,7 +21,12 @@ type environment struct {
 	KeyPath    string
 }
 
-func Init() {
+func Init() error {
+	err := godotenv.Load(envPath)
+	if err != nil {
+		return fmt.Errorf("err loading .env file: %s", err)
+	}
+
 	Env = &environment{
 		DebugLevel: convertEnvToInt(os.Getenv("DEBUG")),
 		Mode:       strings.ToLower(os.Getenv("MODE")),
@@ -29,10 +36,12 @@ func Init() {
 		CertPath:   os.Getenv("SELF_SIGNED_CERT_PATH"),
 		KeyPath:    os.Getenv("SELF_SIGNED_KEY_PATH"),
 	}
+
+	return nil
 }
 
-func Reset() {
-	Init()
+func Reset() error {
+	return Init()
 }
 
 const (

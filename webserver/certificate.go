@@ -9,9 +9,9 @@ import (
 	"wedding_service/env"
 )
 
-func useCertificate(httpsServer *http.Server) error {
+func useCertificate(httpsServer *http.Server, certPath string, keyPath string) error {
 	if env.IsModeDevelopment() {
-		cert, err := certificate.UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+		cert, err := certificate.UseSelfSigned(certPath, keyPath)
 		if err != nil {
 			return fmt.Errorf("could not use localhost certificate: %w", err)
 		}

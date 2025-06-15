@@ -24,7 +24,7 @@ func NewWebserver() (w Webserver, err error) {
 	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
 
 	// use certificate for https/tls
-	err = useCertificate(httpsServer)
+	err = useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
 	if err != nil {
 		return nil, err
 	}

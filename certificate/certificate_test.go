@@ -134,6 +134,7 @@ func Test_loadTLSKeyPair(t *testing.T) {
 }
 
 func TestUseACME(t *testing.T) {
+	t.Chdir("..")
 	env.Init()
 	_, err := UseAcme()
 	if err != nil {
