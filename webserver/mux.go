@@ -7,8 +7,10 @@ import (
 )
 
 func useWebsite(m *http.ServeMux) {
-	f := NewFileServer()
-	m.HandleFunc("GET /", f.Serve)
+
+	fs := NewFileServer()
+
+	m.HandleFunc("GET /", fs.Serve)
 
 	m.HandleFunc("GET /{$}", website.FrontPageHandler)
 	m.HandleFunc("GET /invitation/{$}", website.InvitationPageHandler)
