@@ -1,15 +1,20 @@
 package webserver
 
 import (
+	"fmt"
 	"net/http"
 	"wedding_service/webserver/website"
 )
 
 func useWebsite(m *http.ServeMux) {
+	f := NewFileServer()
+	m.HandleFunc("GET /", f.Serve)
+
 	m.HandleFunc("GET /{$}", website.FrontPageHandler)
 	m.HandleFunc("GET /invitation/{$}", website.InvitationPageHandler)
 }
 
 func useApi(m *http.ServeMux) {
-	m.HandleFunc("GET /api/{$}", null)
+	fmt.Println("using api")
+	//m.HandleFunc("GET /api/{$}", null)
 }
