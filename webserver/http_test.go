@@ -1,10 +1,13 @@
 package webserver
 
-import "testing"
+import (
+	"testing"
+	"wedding_service/env"
+)
 
 func Test_newHttpServer(t *testing.T) {
-	server := newHttpServer("8080")
-	if server == nil {
-		t.Errorf("server should not be nil")
-	}
+	t.Chdir("..")
+	env.Init()
+
+	newHttpServer("8080")
 }

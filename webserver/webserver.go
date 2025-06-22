@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"wedding_service/certificate"
 	"wedding_service/env"
 )
 
@@ -20,14 +21,29 @@ type webserver struct {
 }
 
 func NewWebserver() (w Webserver, err error) {
-	var httpServer *http.Server = newHttpServer(env.Env.HttpPort)
-	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
+	if env.IsModeNotSet() {
+		return nil, errors.New("no MODE set in .env")
+	}
 
-	// use certificate for https/tls
-	err = useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
+	mux := http.NewServeMux()
+	useWebsite(mux)
+	useApi(mux)
+
+	acmeManager, err := certificate.InitAcme()
+	if err != nil {
+		return nil, fmt.Errorf("could not use acme manager: %w", err)
+	}
+
+	httpServer := newHttpServer(env.Env.HttpPort)
+	httpsServer, err := newHttpsServer(env.Env.HttpsPort, acmeManager)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: add middleware with protect host names and logging and more to these.
+	// Maybe useMiddleware(httpsServer) and then put handle there etc.
+	httpServer.Handler = acmeManager.HTTPHandler(mux)
+	httpsServer.Handler = mux
 
 	return &webserver{
 		httpServer:  httpServer,

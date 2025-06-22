@@ -29,8 +29,8 @@ func getSelfSignedCertAndKey(certPath string, keyPath string) (cert []byte, key 
 	return cert, key, nil
 }
 
-// UseSelfSigned loads the certificate and private key as a TLS certificate.
-func UseSelfSigned(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
+// LoadSelfSigned loads the certificate and private key as a TLS certificate.
+func LoadSelfSigned(certPath string, keyPath string) (tlsCert *tls.Certificate, err error) {
 	cert, key, err := getSelfSignedCertAndKey(certPath, keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not GetSelfSignedCertAndKey: %w", err)
@@ -52,8 +52,8 @@ func loadTLSKeyPair(cert []byte, key []byte) (*tls.Certificate, error) {
 	return &x509KeyPair, nil
 }
 
-// UseAcme initializes the autocert.Manager for managing certificates.
-func UseAcme() (acmeManager *autocert.Manager, err error) {
+// InitAcme initializes the autocert.Manager for managing certificates.
+func InitAcme() (acmeManager *autocert.Manager, err error) {
 	hostnames := env.Env.Hostnames
 	if hostnames == nil || len(hostnames) == 0 {
 		return nil, errors.New("hostnames must not be empty, should have format: domain:alias,alias2|domain2:alias3")

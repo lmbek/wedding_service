@@ -8,11 +8,10 @@ import (
 
 func newHttpServer(port string) *http.Server {
 	var addr string
+	addr = fmt.Sprintf(":%s", port)
 
 	if env.IsModeDevelopment() {
 		addr = fmt.Sprintf("localhost:%s", port)
-	} else {
-		addr = fmt.Sprintf(":%s", port)
 	}
 
 	return &http.Server{

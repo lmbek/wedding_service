@@ -26,6 +26,27 @@ func TestNewWebserver(t *testing.T) {
 			t.Errorf("err should not be nil")
 		}
 	})
+
+	t.Run("invalid acme settings", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.Hostnames = nil
+
+		_, err := NewWebserver()
+		if err == nil {
+			t.Errorf("should give an error")
+		}
+	})
+
+	t.Run("invalid webserver settings", func(t *testing.T) {
+		defer env.Reset()
+		env.Env.CertPath = "invalid_cert"
+		env.Env.KeyPath = "invalid_key"
+
+		_, err := NewWebserver()
+		if err == nil {
+			t.Errorf("should give an error")
+		}
+	})
 }
 
 func TestWebserver_ListenAndServe(t *testing.T) {
