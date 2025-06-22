@@ -20,8 +20,9 @@ type webserver struct {
 }
 
 func NewWebserver() (w Webserver, err error) {
-	var httpServer *http.Server = newHttpServer(env.Env.HttpPort)
-	var httpsServer *http.Server = newHttpsServer(env.Env.HttpsPort)
+	if env.IsModeNotSet() {
+		return nil, errors.New("no MODE set in .env")
+	}
 
 	// use certificate for https/tls
 	err = useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
