@@ -34,7 +34,7 @@ func Test_newHttpsServer(t *testing.T) {
 		}
 	})
 
-	t.Run("", func(t *testing.T) {
+	t.Run("testing production mode", func(t *testing.T) {
 		defer env.Reset()
 		env.Env.Mode = "production"
 
