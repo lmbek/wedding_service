@@ -24,8 +24,13 @@ func NewWebserver() (w Webserver, err error) {
 		return nil, errors.New("no MODE set in .env")
 	}
 
-	// use certificate for https/tls
-	err = useCertificate(httpsServer, env.Env.CertPath, env.Env.KeyPath)
+	acmeManager, err := certificate.InitAcme()
+	if err != nil {
+		return nil, fmt.Errorf("could not use acme manager: %w", err)
+	}
+
+	httpServer := newHttpServer(env.Env.HttpPort)
+	httpsServer, err := newHttpsServer(env.Env.HttpsPort, acmeManager)
 	if err != nil {
 		return nil, err
 	}
