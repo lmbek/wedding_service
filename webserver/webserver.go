@@ -71,9 +71,10 @@ func (w *webserver) listenHTTPS() error {
 	}
 
 	// Listen and serve HTTPS / TLS
+	// if there is problem with these, the problem could be that the cert and key is not set before this (for example missing docker-dev mode)
 	err := w.httpsServer.ListenAndServeTLS("", "")
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("HTTPS server error: %w", err)
+		return fmt.Errorf("HTTPS server error (cert not loaded?): %w", err)
 	}
 
 	return nil
