@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Title</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="data:;base64,=">
+	<link href="/default.css" rel="stylesheet">
+	<script src="/main.js"></script>
+</head>
+<body>
+<noscript>Warning: JavaScript is not enabled</noscript>
+	{{template "nav.gohtml" .}}
+	<main>
+		<h1>Hej {{.Name}}</h1>
+        {{template "pages/content" .}}
+	</main>
+</body>
+</html>
