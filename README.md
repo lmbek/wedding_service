@@ -1,5 +1,5 @@
 # wedding_service
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+<!--![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)-->
 
 A simple yet elegant web service for hosting your wedding website — including invitations, planned activities, RSVP forms, and other delightful features to ensure a memorable celebration.
 
