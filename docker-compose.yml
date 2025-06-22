@@ -15,7 +15,7 @@ services:
         environment:
             - GOOS=linux
             - GOARCH=amd64
-            - MODE=docker-dev
+            - MODE=docker-dev # TODO: fix it so docker puts the mode in, instead of docker compose env we do now. (this will get overwritten, which is a problem)
         working_dir: /app
         command: ./${APP_NAME}
         networks:
