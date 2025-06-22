@@ -13,7 +13,3 @@ func useWebsite(m *http.ServeMux) {
 func useApi(m *http.ServeMux) {
 	m.HandleFunc("GET /api/{$}", null)
 }
-
-func null(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello world"))
-}
