@@ -66,7 +66,7 @@ func TestUseSelfSigned(t *testing.T) {
 	env.Init()
 	defer env.Reset()
 
-	_, err := UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+	_, err := LoadSelfSigned(env.Env.CertPath, env.Env.KeyPath)
 	if err != nil {
 		t.Errorf("could not UseLocalhost: %s", err)
 		return
@@ -77,7 +77,11 @@ func TestUseSelfSigned(t *testing.T) {
 		env.Env.CertPath = "nonexistent-cert-file"
 		env.Env.KeyPath = "nonexistent-key-file"
 
-		UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+		_, err = LoadSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+		if err == nil {
+			t.Errorf("expected an error due to invalid cert/key content")
+			return
+		}
 
 	})
 
@@ -103,9 +107,10 @@ func TestUseSelfSigned(t *testing.T) {
 		env.Env.CertPath = tempCert.Name()
 		env.Env.KeyPath = tempKey.Name()
 
-		_, err = UseSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+		_, err = LoadSelfSigned(env.Env.CertPath, env.Env.KeyPath)
 		if err == nil {
 			t.Errorf("expected an error due to invalid cert/key content")
+			return
 		}
 	})
 }
@@ -136,9 +141,9 @@ func Test_loadTLSKeyPair(t *testing.T) {
 func TestUseACME(t *testing.T) {
 	t.Chdir("..")
 	env.Init()
-	_, err := UseAcme()
+	_, err := InitAcme()
 	if err != nil {
-		t.Errorf("could not UseAcme: %s", err)
+		t.Errorf("could not InitAcme: %s", err)
 		return
 	}
 
@@ -148,7 +153,7 @@ func TestUseACME(t *testing.T) {
 		env.Env.Hostnames = nil
 
 		// Backup and clear environment variable
-		_, err := UseAcme()
+		_, err := InitAcme()
 		if err == nil {
 			t.Errorf("error is nil")
 		}
