@@ -3,11 +3,12 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 // Person represents a guest/person in the wedding service.
 type Person struct {
-	ID    int    `json:"id"`
+	Id    int    `json:"id" swaggerignore:"true"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
@@ -19,8 +20,8 @@ type UpdatePerson struct {
 }
 
 var persons = []Person{
-	{ID: 1, Name: "Alice", Email: "alice@example.com"},
-	{ID: 2, Name: "Bob", Email: "bob@example.com"},
+	{Id: 1, Name: "Alice", Email: "alice@example.com"},
+	{Id: 2, Name: "Bob", Email: "bob@example.com"},
 }
 
 // ListPersonsHandler godoc
@@ -46,13 +47,15 @@ func ListPersonsHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  map[string]string
 // @Router       /api/persons/{id}/ [get]
 func GetPersonHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := parseIDFromPath(r.URL.Path)
+	id := r.PathValue("id")
+
+	idAsInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid ID"}`, http.StatusBadRequest)
-		return
+		http.Error(w, `{"error":"bad request"}`, http.StatusBadRequest)
 	}
+
 	for _, p := range persons {
-		if p.ID == id {
+		if p.Id == idAsInt {
 			json.NewEncoder(w).Encode(p)
 			return
 		}
@@ -77,7 +80,7 @@ func PostPersonHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"Invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	p.ID = getNextID()
+	p.Id = getNextID()
 	persons = append(persons, p)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(p)
@@ -97,18 +100,20 @@ func PostPersonHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure      500     {object}  map[string]string
 // @Router       /api/persons/{id}/ [put]
 func PutPersonHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := parseIDFromPath(r.URL.Path)
+	id := r.PathValue("id")
+
+	idAsInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid ID"}`, http.StatusBadRequest)
-		return
+		http.Error(w, `{"error":"bad request"}`, http.StatusBadRequest)
 	}
+
 	var patch UpdatePerson
 	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
 		http.Error(w, `{"error":"Invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
 	for i, p := range persons {
-		if p.ID == id {
+		if p.Id == idAsInt {
 			if patch.Name != nil {
 				p.Name = *patch.Name
 			}
@@ -134,13 +139,15 @@ func PutPersonHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  map[string]string
 // @Router       /api/persons/{id}/ [delete]
 func DeletePersonHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := parseIDFromPath(r.URL.Path)
+	id := r.PathValue("id")
+
+	idAsInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid ID"}`, http.StatusBadRequest)
-		return
+		http.Error(w, `{"error":"bad request"}`, http.StatusBadRequest)
 	}
+
 	for i, p := range persons {
-		if p.ID == id {
+		if p.Id == idAsInt {
 			persons = append(persons[:i], persons[i+1:]...)
 			w.WriteHeader(http.StatusNoContent)
 			return
