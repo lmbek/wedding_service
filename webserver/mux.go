@@ -8,7 +8,7 @@ import (
 )
 
 // automated swagger generate on general generate
-//go:generate swag init --output webserver/website/frontend/out/public/api/swagger --parseDependency
+//go:generate swag init --dir .. --output ../webserver/website/frontend/out/public/api/swagger --parseDependency
 
 // manual swagger generate:
 // swag init --output webserver/website/frontend/out/public/api/swagger --parseDependency
