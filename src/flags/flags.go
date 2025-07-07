@@ -14,5 +14,5 @@ func LoadFrontendFlag() string {
 		parsed = true
 	}
 	FrontendFlag = *frontendFlag
-	return FrontendFlag
+	return *frontendFlag
 }
