@@ -1,27 +1,76 @@
 package website
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"net/http"
+	"wedding_service/webserver/website/frontend"
 )
 
-func LoadPage(w http.ResponseWriter, frontpageData string, tmpl *template.Template) {
-	LoadLayout(w, tmpl)
-	LoadComponents(w, tmpl)
-	_, err := tmpl.Parse(frontpageData)
+func loadPage(w http.ResponseWriter, tmpl *template.Template, page string) {
+	_, err := tmpl.Parse(page)
 	if err != nil {
 		fmt.Fprint(w, err)
 		return
 	}
 }
 
-func ExecutePage(w http.ResponseWriter, tmpl *template.Template, frontPageData string, data any) {
-	LoadPage(w, frontPageData, tmpl)
+func executePage(w http.ResponseWriter, pagePath string, data any) {
+	tmpl := template.New(pagePath)
+
+	page := fetchPage(w, tmpl, pagePath)
+	if page == "" {
+		return
+	}
 
 	err := tmpl.Execute(w, data)
 	if err != nil {
-		fmt.Fprint(w, err)
-		return
+		http.Error(w, "Template execution failed", http.StatusInternalServerError)
 	}
+}
+
+// fetchPage returns a page based on the path given, if it exists as a file
+func fetchPage(w http.ResponseWriter, tmpl *template.Template, pagePath string) string {
+	// Check cache first
+	content, exists := ReadCache(pagePath)
+	if exists {
+		loadLayout(w, tmpl)
+		loadComponents(w, tmpl)
+
+		_, err := tmpl.New("page").Parse(content)
+		if err != nil {
+			http.Error(w, "Failed to parse cached page template", http.StatusInternalServerError)
+			return ""
+		}
+		return content
+	}
+
+	// Not in cache: read from FS
+	loadLayout(w, tmpl)
+	loadComponents(w, tmpl)
+
+	filesystem := frontend.DefaultFrontend.GetPrivateFileSystem()
+	file, err := filesystem.Open(pagePath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Template open failed: %s — %v", pagePath, err), http.StatusInternalServerError)
+		return ""
+	}
+	defer file.Close()
+
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(file); err != nil {
+		http.Error(w, fmt.Sprintf("Template read failed: %s — %v", pagePath, err), http.StatusInternalServerError)
+		return ""
+	}
+	page := buf.String()
+
+	_, err = tmpl.New("page").Parse(page)
+	if err != nil {
+		http.Error(w, "Failed to parse page template", http.StatusInternalServerError)
+		return ""
+	}
+
+	UpdateCache(pagePath, page)
+	return page
 }
