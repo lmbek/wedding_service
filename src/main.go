@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"wedding_service/env"
 	"wedding_service/webserver"
@@ -10,6 +11,7 @@ import (
 var mainWebserver webserver.Webserver
 
 func main() {
+	flag.Parse()
 	_ = initEnv()
 	mainWebserver, _ = createWebserver()
 	startWebserver(mainWebserver)
