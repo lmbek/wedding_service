@@ -10,11 +10,11 @@ all: docker-stop rm-executable go-build-for-docker run-as-daemon
 generate: go-generate
 
 go-generate:
-	cd src && go generate ./...
+	cd src && go generate -tags self_sign_cert ./...
 
 go-generate-cert:
 	@echo "Running go generate..."
-	cd src && go generate -tags self_sign_cert src/certificate/self_sign_cert/self_sign_cert.go
+	cd src && go generate -tags self_sign_cert certificate/self_sign_cert/self_sign_cert.go
 	@echo
 
 go-generate-swagger:
