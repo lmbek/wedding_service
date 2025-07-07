@@ -5,12 +5,14 @@ import "flag"
 var FrontendFlag string
 var frontendFlag = flag.String("frontend", "", "Path to frontend files")
 
-func parse() {
-	flag.Parse()
-}
+// Only parse flags once, safely
+var parsed bool
 
 func LoadFrontendFlag() string {
-	parse()
+	if !parsed {
+		flag.Parse()
+		parsed = true
+	}
 	FrontendFlag = *frontendFlag
-	return *frontendFlag
+	return FrontendFlag
 }
