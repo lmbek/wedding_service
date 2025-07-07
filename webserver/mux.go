@@ -2,9 +2,11 @@ package webserver
 
 import (
 	"github.com/swaggo/http-swagger"
+	"golang.org/x/net/websocket"
 	"net/http"
 	"wedding_service/webserver/api"
 	"wedding_service/webserver/website"
+	"wedding_service/webserver/website/frontend"
 )
 
 // automated swagger generate on general generate
@@ -14,7 +16,7 @@ import (
 // swag init --output webserver/website/frontend/out/public/api/swagger --parseDependency
 
 func useWebsite(m *http.ServeMux) {
-	fs := NewFileServer()
+	fs := frontend.DefaultFrontend
 	m.HandleFunc("GET /", fs.Serve)
 	m.HandleFunc("GET /{$}", website.FrontPageHandler)
 	m.HandleFunc("GET /invitation/{$}", website.InvitationPageHandler)
@@ -26,6 +28,7 @@ func useApi(m *http.ServeMux) {
 	m.HandleFunc("GET /api/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "webserver/website/frontend/out/public/api/swagger/swagger.json")
 	})
+	m.Handle("GET /websocket/hotreload", websocket.Handler(frontend.HandleRegisterClient))
 
 	m.HandleFunc("GET /api/persons/{$}", api.ListPersonsHandler)
 	m.HandleFunc("GET /api/persons/{id}/{$}", api.GetPersonHandler)
