@@ -30,6 +30,10 @@ jobs:
       - name: Set environment variable GOOS=linux in .env
         run: echo -e "\nGOOS=linux" >> .env
 
+      - name: Install swag CLI
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+        working-directory: src
+
       - name: Run go generate using Makefile
         run: make go-generate
 
