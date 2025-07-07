@@ -64,6 +64,12 @@ Use the Makefile targets to handle everything smoothly:
 
   `make` or `make all`
 
+This starts the docker-compose so you dont have to run anything in docker other than
+
+`make down`
+
+When you want to stop the containers
+
 ### Docker
 
 If you want to run Docker commands separately, you can also use:
