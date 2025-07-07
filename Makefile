@@ -10,8 +10,16 @@ all: docker-stop rm-executable go-build-for-docker run-as-daemon
 generate: go-generate
 
 go-generate:
+	cd src && go generate ./...
+
+go-generate-cert:
 	@echo "Running go generate..."
-	go generate -tags self_sign_cert ./...
+	cd src && go generate -tags self_sign_cert src/certificate/self_sign_cert/self_sign_cert.go
+	@echo
+
+go-generate-swagger:
+	@echo "Running go generate..."
+	cd src && go generate src/webserver/mux.go
 	@echo
 
 down: docker-stop
@@ -30,20 +38,22 @@ build: go-build
 
 go-build:
 	@echo "Go building..."
-	@echo "Building $(APP_NAME)"
-	CGO_ENABLED=0 go build -o $(APP_NAME) .
+	@echo "Building out/$(APP_NAME)"
+	CGO_ENABLED=0 go build -o out/$(APP_NAME) .
 	@echo
 
 go-build-for-docker:
 	@echo "Copying dependencies..."
 	mkdir -p $(BUILD_DIR)/certificate/self_sign_cert/
-	cp $(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
-	cp $(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
+	mkdir -p $(BUILD_DIR)/webserver/website/frontend/
+	cp src/$(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
+	cp src/$(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
+	cp -r src/webserver/website/frontend/* $(BUILD_DIR)/webserver/website/frontend/
 	cp .env $(BUILD_DIR)/.env
 	@echo
 
-	@echo "Building $(APP_NAME)"
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/$(APP_NAME) .
+	@echo "Building $(BUILD_DIR)/$(APP_NAME)"
+	cd src && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../$(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
 go-build-for-github:

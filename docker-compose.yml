@@ -6,7 +6,7 @@ services:
         depends_on: # wait for mysql to start before this container
             - wedding-mysql-service
         volumes:
-            - ./docker-volumes/main-service-files:/app
+            - ./out/docker-volumes/main-service-files:/app
         ports:
             - "${WEDDING_SERVICE_HTTP_PORT}:${WEDDING_SERVICE_HTTP_PORT}"
             - "${WEDDING_SERVICE_HTTPS_PORT}:${WEDDING_SERVICE_HTTPS_PORT}"
@@ -17,6 +17,7 @@ services:
             - GOARCH=amd64
             - MODE=docker-dev # TODO: fix it so docker puts the mode in, instead of docker compose env we do now. (this will get overwritten, which is a problem)
         working_dir: /app
+        #command: ./${APP_NAME} # dynamic frontend can only be used if copied over... #-frontend=./webserver/website/frontend/out # development frontend mode
         command: ./${APP_NAME} -frontend=./webserver/website/frontend/out # development frontend mode
         networks:
             - wedding-network
@@ -26,7 +27,7 @@ services:
         image: mysql:8.4.5
         restart: "no"
         volumes:
-            - ./docker-volumes/mysql-data:/var/lib/mysql
+            - ./out/docker-volumes/mysql-data:/var/lib/mysql
         env_file:
             - .env
         environment:
