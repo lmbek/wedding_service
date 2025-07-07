@@ -75,36 +75,36 @@ run: go-run
 
 go-run:
 	@echo "Running go"
-	go run .
+	cd src && go run .
 	@echo
 
 test: go-test
 
 go-test:
 	@echo "Running all tests"
-	go test -count=1 ./...
+	cd src && go test -count=1 ./...
 	@echo
 
 test-v: go-test-v
 
 go-test-v:
 	@echo "Running all tests"
-	go test -count=1 -v ./...
+	cd src && go test -count=1 -v ./...
 	@echo
 
 test-cached: go-test-cached
 
 go-test-cached:
 	@echo "Running all tests"
-	go test ./...
+	cd src && go test ./...
 	@echo
 
 test-coverage: go-test-coverage
 
 go-test-coverage:
 	@echo "Running tests with coverage"
-	go test -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out
+	cd src && go test -coverprofile=coverage.out ./...
+	cd src && go tool cover -func=coverage.out
 	@echo "To view HTML coverage report, run: go tool cover -html=coverage.out"
 	@echo
 
@@ -112,14 +112,14 @@ test-coverage-html: go-test-coverage-html
 
 go-test-coverage-html: test-coverage
 	@echo "Viewing test coverage as html"
-	go tool cover -html=coverage.out
+	cd src && go tool cover -html=coverage.out
 
 bench: go-bench
 
 go-bench:
 	@echo "Running benchmarks"
 	@rm -f cpu.prof mem.prof block.prof mutex.prof trace.out goroutine.prof
-	go test -bench=. -run=^$$ -benchtime=5s -benchmem \
+	cd src && go test -bench=. -run=^$$ -benchtime=5s -benchmem \
 		-cpuprofile=cpu.prof \
 		-memprofile=mem.prof \
 		-blockprofile=block.prof \
@@ -149,7 +149,7 @@ race: go-race
 
 go-race:
 	@echo "Testing for race conditions"
-	go test -count=1 -race ./...
+	cd src && go test -count=1 -race ./...
 	@echo "Race test completed."
 
 
@@ -157,12 +157,12 @@ race-v: go-race-v
 
 go-race-v:
 	@echo "Testing for race conditions"
-	go test -count=1 -race -v ./...
+	cd src && go test -count=1 -race -v ./...
 	@echo "Race test completed."
 
 fuzz: go-fuzz
 
 go-fuzz:
 	@echo "Running fuzz tests"
-	go test -fuzz=Fuzz -fuzztime=10s
+	cd src && go test -fuzz=Fuzz -fuzztime=10s
 	@echo "Fuzz test completed."
