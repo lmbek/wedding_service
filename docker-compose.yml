@@ -2,7 +2,7 @@ services:
     wedding-go-service: # go service
         container_name: wedding-go-service
         image: alpine:3.21.3
-        restart: no
+        restart: "no"
         depends_on: # wait for mysql to start before this container
             - wedding-mysql-service
         volumes:
@@ -17,14 +17,14 @@ services:
             - GOARCH=amd64
             - MODE=docker-dev # TODO: fix it so docker puts the mode in, instead of docker compose env we do now. (this will get overwritten, which is a problem)
         working_dir: /app
-        command: ./${APP_NAME}
+        command: ./${APP_NAME} -frontend=./webserver/website/frontend/out # development frontend mode
         networks:
             - wedding-network
 
     wedding-mysql-service: # mysql
         container_name:  wedding-mysql-service
         image: mysql:8.4.5
-        restart: no
+        restart: "no"
         volumes:
             - ./docker-volumes/mysql-data:/var/lib/mysql
         env_file:
@@ -38,7 +38,7 @@ services:
     wedding-prometheus:
         container_name: wedding-prometheus
         image: prom/prometheus:latest
-        restart: no
+        restart: "no"
         ports:
             - "9090:9090"
         networks:
@@ -46,7 +46,7 @@ services:
     wedding-grafana:
         container_name: wedding-grafana
         image: grafana/grafana:latest
-        restart: no
+        restart: "no"
         ports:
             - "3000:3000"
         networks:
