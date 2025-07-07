@@ -1,6 +1,6 @@
 # Load .env variables
-ifneq (,$(wildcard .env))
-	include .env
+ifneq (,$(wildcard src/.env))
+	include src/.env
 	export
 endif
 
@@ -49,7 +49,7 @@ go-build-for-docker:
 	cp src/$(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
 	cp src/$(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
 	cp -r src/webserver/website/frontend/* $(BUILD_DIR)/webserver/website/frontend/
-	cp .env $(BUILD_DIR)/.env
+	cp src/.env $(BUILD_DIR)/.env
 	@echo
 
 	@echo "Building $(BUILD_DIR)/$(APP_NAME)"
@@ -102,10 +102,12 @@ go-test-cached:
 test-coverage: go-test-coverage
 
 go-test-coverage:
-	@echo "Running tests with coverage"
-	cd src && go test -coverprofile=coverage.out ./...
+	@echo "Running tests with coverage excluding swagger package"
+	cd src && go test -coverprofile=coverage-raw.out ./...
+	cd src && grep -v "/swagger/" coverage-raw.out > coverage.out # filter out things that should not be covered
 	cd src && go tool cover -func=coverage.out
-	@echo "To view HTML coverage report, run: go tool cover -html=coverage.out"
+	@echo "To view HTML coverage report, run:"
+	@echo "  cd src && go tool cover -html=coverage.out"
 	@echo
 
 test-coverage-html: go-test-coverage-html

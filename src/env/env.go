@@ -1,7 +1,6 @@
 package env
 
 import (
-	"flag"
 	"fmt"
 	"github.com/joho/godotenv"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"sync"
 )
 
-var EnvPath = "../.env"
+var EnvPath = ".env"
 var Env *environment
 
 type environment struct {
@@ -26,8 +25,6 @@ type environment struct {
 var mutex sync.RWMutex
 
 func Init() error {
-	flag.Parse()
-
 	// TODO: make a lock for all getters and setters, and then also test if godotenv in general has race conditions
 	mutex.Lock()
 	defer mutex.Unlock()

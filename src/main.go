@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"wedding_service/env"
 	"wedding_service/webserver"
@@ -12,7 +13,11 @@ var mainWebserver webserver.Webserver
 
 func main() {
 	flag.Parse()
-	_ = initEnv()
+	err := initEnv()
+	if err != nil {
+		fmt.Printf("err initEnv(): %v\n", err)
+		return
+	}
 	mainWebserver, _ = createWebserver()
 	startWebserver(mainWebserver)
 }
