@@ -15,11 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24.2'
-
       - name: Cache Go modules and build cache
         uses: actions/cache@v3
         with:
@@ -29,6 +24,11 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2'
 
       - name: Download dependencies
         run: go mod tidy
@@ -70,6 +70,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Set up Go
         uses: actions/setup-go@v5
