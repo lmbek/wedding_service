@@ -1,17 +1,21 @@
 //go:build windows && self_sign_cert
 
+// TODO: the self_sign_cert ignore is for test coverage ignore. Tests can be written to remove this
+
 // READ THIS FIRST:
 // create the certificate and key files for localhost first!
 // You need to generate self-signed certificates
 // by running go generate
 
-//// go:generate go run ./self_sign_cert/self_sign_cert.go
+//// go:generate go run ./self_sign_cert/self_sign_cert_windows.go
 //go:generate go run self_sign_cert_windows.go
 
 //////
 
 // NOTE: this file is ignored by the default build
 // as it is a tool, we don't count this file in our test coverage total
+
+// TODO: streamline this with the linux version of this and do so only localhost is supported and not multiple hosts...
 
 package main
 
@@ -35,29 +39,16 @@ import (
 )
 
 func main() {
-	// TEST SERVER CAN BE USED, BUT BE AWARE THAT EMBEDDING USES PREVIOUS LOCALHOST CERT,
-	// SO THE CREATE SELFSIGNED AND TESTSERVER CANT RUN AT THE SAME TIME!
+	certName := "localhost"
+	orgNames := []string{"Local Beksoft Cert"}
+	dnsNames := []string{"localhost"}
 
-	// FIRST FLIP THE IF STATEMENT
-	// SECOND UNCOMMENT THE EMBEDS INSIDE certificate_windows.go
-	// if you don't uncomment the embeds this err will come:
-	// selfsigning failed: failed to load embedded TLS certificate and key: tls: failed to find any PEM data in certificate input
-
-	if true {
-		certName := "localhost"
-		orgNames := []string{"Local Beksoft Cert"}
-		dnsNames := []string{"localhost"}
-
-		createSelfSignedCertificateFile(certName, orgNames, dnsNames)
-		return
-	}
-
-	// Test HTTPS server setup
-	//testServer()
+	generateSelfSignedCerts(certName, orgNames, dnsNames)
+	return
 }
 
-// CreateSelfSignedCertificateFile generates a self-signed certificate and saves it to files with a timestamp
-func createSelfSignedCertificateFile(certName string, orgNames []string, dnsNames []string) {
+// generateSelfSignedCerts generates a self-signed certificate and saves it to files with a timestamp
+func generateSelfSignedCerts(certName string, orgNames []string, dnsNames []string) {
 	if certName == "" {
 		certName = "localhost"
 	}
@@ -120,6 +111,8 @@ func createSelfSignedCertificateFile(certName string, orgNames []string, dnsName
 	}
 
 	fmt.Printf("Certificate and private key have been written to '%s' and '%s'\n", certFileName, keyFileName)
+
+	generateSelfSignedPEM(certName, cert)
 
 	// Add the certificate to the Windows CA store
 	err = AddCertificateToWindowsCAStore(certName, orgNames, cert)
@@ -211,14 +204,7 @@ func loadTLSConfig(certFileName, keyFileName string) error {
 	return nil
 }
 
-// AddCertificateToWindowsCAStore adds the provided certificate to the Current User's CA store (no admin required)
-func AddCertificateToWindowsCAStore(certName string, orgNames []string, certPEM []byte) error {
-	// remove already existing PEM's already exported with same name
-	err := RemoveCertificateFromCurrentUser(orgNames)
-	if err != nil {
-		return err
-	}
-
+func generateSelfSignedPEM(certName string, certPEM []byte) error {
 	// Define the certificate file path inside the certificate directory with a clearer name
 	timestamp := time.Now().Format("20060102_150405") // Format: YYYYMMDD_HHMMSS
 	certFileName := fmt.Sprintf("%s_ca_%s.pem", certName, timestamp)
@@ -226,6 +212,17 @@ func AddCertificateToWindowsCAStore(certName string, orgNames []string, certPEM 
 
 	// Save the certificate directly to the certificate folder
 	err = os.WriteFile(certFilePath, certPEM, 0644) // Public read, owner write
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AddCertificateToWindowsCAStore adds the provided certificate to the Current User's CA store (no admin required)
+func AddCertificateToWindowsCAStore(certName string, orgNames []string, certPEM []byte) error {
+	// remove already existing PEM's already exported with same name
+	err := RemoveCertificateFromCurrentUser(orgNames)
 	if err != nil {
 		return err
 	}
