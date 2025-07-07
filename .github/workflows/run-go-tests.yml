@@ -26,11 +26,9 @@ jobs:
 
       - name: Copy .env.example to .env
         run: cp .env.example .env
-        working-directory: src
 
       - name: Set environment variable GOOS=linux in .env
         run: echo -e "\nGOOS=linux" >> .env
-        working-directory: src
 
       - name: Run go generate using Makefile
         run: make go-generate
