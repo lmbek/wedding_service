@@ -14,7 +14,6 @@ var Env *environment
 
 type environment struct {
 	DebugLevel int
-	Mode       string
 	HttpPort   string
 	HttpsPort  string
 	Hostnames  map[string][]string
@@ -35,7 +34,6 @@ func Init() error {
 
 	Env = &environment{
 		DebugLevel: convertEnvToInt(os.Getenv("DEBUG")),
-		Mode:       strings.ToLower(os.Getenv("MODE")),
 		HttpPort:   os.Getenv("WEDDING_SERVICE_HTTP_PORT"),
 		HttpsPort:  os.Getenv("WEDDING_SERVICE_HTTPS_PORT"),
 		Hostnames:  readHostnames(os.Getenv("WEDDING_SERVICE_HOSTNAMES")),
@@ -72,22 +70,6 @@ func IsDebugErrorsEnabled() bool {
 
 func IsDebugDisabled() bool {
 	return Env.DebugLevel == None
-}
-
-func IsModeDevelopment() bool {
-	return Env.Mode == "development"
-}
-
-func IsModeDockerDevelopment() bool {
-	return Env.Mode == "docker-dev"
-}
-
-func IsModeProduction() bool {
-	return Env.Mode == "production"
-}
-
-func IsModeNotSet() bool {
-	return Env.Mode == ""
 }
 
 func convertEnvToInt(envVar string) int {

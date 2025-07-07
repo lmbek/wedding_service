@@ -3,14 +3,14 @@ package webserver
 import (
 	"fmt"
 	"net/http"
-	"wedding_service/env"
+	"wedding_service/buildtag"
 )
 
 func newHttpServer(port string) *http.Server {
 	var addr string
 	addr = fmt.Sprintf(":%s", port)
 
-	if env.IsModeDevelopment() {
+	if buildtag.IsDevelopment() {
 		addr = fmt.Sprintf("localhost:%s", port)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
 	"net/http"
+	"wedding_service/buildtag"
 	"wedding_service/certificate"
 	"wedding_service/env"
 )
@@ -26,11 +27,11 @@ func newHttpsServer(port string, acmeManager *autocert.Manager) (*http.Server, e
 		return cert, nil
 	}
 
-	if env.IsModeDevelopment() {
+	if buildtag.IsDevelopment() {
 		server.Addr = fmt.Sprintf("localhost%s", server.Addr)
 	}
 
-	if env.IsModeProduction() {
+	if buildtag.IsProduction() {
 		server.TLSConfig.GetCertificate = acmeManager.GetCertificate
 	}
 

@@ -53,7 +53,7 @@ go-build-for-docker:
 	@echo
 
 	@echo "Building $(BUILD_DIR)/$(APP_NAME)"
-	cd src && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../$(BUILD_DIR)/$(APP_NAME) .
+	cd src && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=dockerdev -o ../$(BUILD_DIR)/$(APP_NAME) .
 	@echo
 
 go-build-for-github:

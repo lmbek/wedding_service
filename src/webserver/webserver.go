@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"wedding_service/buildtag"
 	"wedding_service/certificate"
 	"wedding_service/env"
 )
@@ -21,10 +22,6 @@ type webserver struct {
 }
 
 func NewWebserver() (w Webserver, err error) {
-	if env.IsModeNotSet() {
-		return nil, errors.New("no MODE set in .env")
-	}
-
 	mux := http.NewServeMux()
 	useWebsite(mux)
 	useApi(mux)
@@ -66,7 +63,7 @@ func (w *webserver) ListenAndServe() error {
 }
 
 func (w *webserver) listenHTTPS() error {
-	if env.IsDebugInfoEnabled() && env.IsModeDevelopment() {
+	if env.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
 		fmt.Println("Listening on", fmt.Sprintf("https://localhost:%s", env.Env.HttpsPort))
 	}
 
@@ -81,7 +78,7 @@ func (w *webserver) listenHTTPS() error {
 }
 
 func (w *webserver) listenHTTP() error {
-	if env.IsDebugInfoEnabled() && env.IsModeDevelopment() {
+	if env.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
 		fmt.Println("Listening on", fmt.Sprintf("http://localhost:%s", env.Env.HttpPort))
 	}
 

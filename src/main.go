@@ -18,8 +18,16 @@ func main() {
 		fmt.Printf("err initEnv(): %v\n", err)
 		return
 	}
-	mainWebserver, _ = createWebserver()
-	startWebserver(mainWebserver)
+	mainWebserver, err = createWebserver()
+	if err != nil {
+		fmt.Printf("err createWebserver(): %v\n", err)
+		return
+	}
+	err = startWebserver(mainWebserver)
+	if err != nil {
+		fmt.Printf("err startWebserver(): %v\n", err)
+		return
+	}
 }
 
 func initEnv() error {

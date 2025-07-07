@@ -17,7 +17,6 @@ func Test_newHttpsServer(t *testing.T) {
 
 	t.Run("use invalid cert and key", func(t *testing.T) {
 		defer env.Reset()
-		env.Env.Mode = "development"
 		env.Env.CertPath = "invalid_cert"
 		env.Env.KeyPath = "invalid_key"
 
@@ -36,7 +35,6 @@ func Test_newHttpsServer(t *testing.T) {
 
 	t.Run("testing production mode", func(t *testing.T) {
 		defer env.Reset()
-		env.Env.Mode = "production"
 
 		_, err := newHttpsServer("8443", acme)
 		if err != nil {

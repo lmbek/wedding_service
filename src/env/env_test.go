@@ -11,7 +11,6 @@ func TestInit(t *testing.T) {
 	defer Reset()
 
 	_ = os.Setenv("DEBUG", "3")
-	_ = os.Setenv("MODE", "Development")
 	_ = os.Setenv("WEDDING_SERVICE_HTTP_PORT", "8080")
 	_ = os.Setenv("WEDDING_SERVICE_HTTPS_PORT", "8443")
 	_ = os.Setenv("WEDDING_SERVICE_HOSTNAMES", "example.com:www.example.com,www2.example.com|example2.com:www.example2.com")
@@ -25,9 +24,6 @@ func TestInit(t *testing.T) {
 
 	if Env.DebugLevel != Info {
 		t.Errorf("Expected DebugLevel to be %d, got %d", Info, Env.DebugLevel)
-	}
-	if Env.Mode != "development" {
-		t.Errorf("Expected Mode to be 'development', got '%s'", Env.Mode)
 	}
 	if Env.HttpPort != "8080" {
 		t.Errorf("Expected HttpPort to be '8080', got '%s'", Env.HttpPort)
@@ -140,70 +136,6 @@ func TestIsDebugDisabled(t *testing.T) {
 	Env = &environment{DebugLevel: All}
 	if IsDebugDisabled() {
 		t.Error("Expected IsDebugDisabled to return false")
-	}
-}
-
-func TestIsModeDevelopment(t *testing.T) {
-	t.Chdir("..")
-	Init()
-	defer Reset()
-
-	Env = &environment{Mode: "development"}
-	if !IsModeDevelopment() {
-		t.Error("Expected IsModeDevelopment to return true")
-	}
-
-	Env = &environment{Mode: "production"}
-	if IsModeDevelopment() {
-		t.Error("Expected IsModeDevelopment to return false")
-	}
-}
-
-func TestIsModeDockerDevelopment(t *testing.T) {
-	t.Chdir("..")
-	Init()
-	defer Reset()
-
-	Env = &environment{Mode: "docker-dev"}
-	if !IsModeDockerDevelopment() {
-		t.Error("Expected IsModeDockerDevelopment to return true")
-	}
-
-	Env = &environment{Mode: "development"}
-	if IsModeDockerDevelopment() {
-		t.Error("Expected IsModeDevelopment to return false")
-	}
-}
-
-func TestIsModeProduction(t *testing.T) {
-	t.Chdir("..")
-	Init()
-	defer Reset()
-
-	Env = &environment{Mode: "production"}
-	if !IsModeProduction() {
-		t.Error("Expected IsModeProduction to return true")
-	}
-
-	Env = &environment{Mode: "development"}
-	if IsModeProduction() {
-		t.Error("Expected IsModeProduction to return false")
-	}
-}
-
-func TestIsModeNotSet(t *testing.T) {
-	t.Chdir("..")
-	Init()
-	defer Reset()
-
-	Env = &environment{Mode: ""}
-	if !IsModeNotSet() {
-		t.Error("Expected IsModeNotSet to return true")
-	}
-
-	Env = &environment{Mode: "something"}
-	if IsModeNotSet() {
-		t.Error("Expected IsModeNotSet to return false")
 	}
 }
 
