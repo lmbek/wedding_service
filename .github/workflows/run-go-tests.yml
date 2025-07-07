@@ -18,7 +18,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.2'
+          go-version: '1.24.4'
+          cache: false
 
       - name: Download dependencies
         run: go mod download
@@ -64,7 +65,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.2'
+          go-version: '1.24.4'
+          cache: false
 
       - name: Build application using Makefile
         run: make go-build-for-github
