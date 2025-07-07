@@ -8,13 +8,15 @@
 	<link rel="icon" href="data:;base64,=">
 	<link href="/default.css" rel="stylesheet">
 	<script src="/main.js"></script>
+	<script src="/gompa-dev.js"></script>
 </head>
 <body>
 <noscript>Warning: JavaScript is not enabled</noscript>
-	{{template "nav.gohtml" .}}
+	{{template "components/nav.gohtml" .}}
 	<main>
-		<h1>Hej {{.Name}}</h1>
-        {{template "pages/content" .}}
+		<h1>Welcome  {{.Name}}</h1>
+        {{template "page" .}}
+
 	</main>
 </body>
 </html>
