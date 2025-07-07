@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-var EnvPath = ".env"
+var EnvPath = "../.env"
 var Env *environment
 
 type environment struct {
