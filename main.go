@@ -6,6 +6,7 @@ import (
 	"wedding_service/webserver"
 )
 
+// TODO: rework this main.go into a much smaller version and reduce amount of testing needed. Simplify things
 var mainWebserver webserver.Webserver
 
 func main() {
