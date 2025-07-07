@@ -58,7 +58,7 @@ go-build-for-docker:
 
 go-build-for-github:
 	@echo "Building $(APP_NAME)"
-	CGO_ENABLED=0 go build -o $(APP_NAME) . #github don't need a build directory, we just test if it can build
+	cd src && CGO_ENABLED=0 go build -o $(APP_NAME) . #github don't need a build directory, we just test if it can build
 	@echo
 
 docker-build:

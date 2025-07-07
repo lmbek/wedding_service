@@ -68,4 +68,3 @@ jobs:
 
       - name: Build application using Makefile
         run: make go-build-for-github
-        working-directory: src
