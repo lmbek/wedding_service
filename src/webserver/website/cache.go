@@ -10,7 +10,7 @@ var cacheMu sync.RWMutex
 var pageCache = make(map[string]string)
 
 func ReadCache(path string) (string, bool) {
-	if flags.FrontendFlag != "" {
+	if !flags.TemplateCachingEnabled() {
 		return "", false
 	}
 	fmt.Println("read cache")
@@ -21,7 +21,7 @@ func ReadCache(path string) (string, bool) {
 }
 
 func UpdateCache(path string, page string) bool {
-	if flags.FrontendFlag != "" {
+	if !flags.TemplateCachingEnabled() {
 		return false
 	}
 	fmt.Println("updated cache")
