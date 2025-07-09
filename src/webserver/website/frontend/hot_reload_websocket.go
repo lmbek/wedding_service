@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"fmt"
 	"golang.org/x/net/websocket"
 	"io"
 	"log"
@@ -34,7 +35,8 @@ func removeClient(ws *websocket.Conn) {
 // HandleRegisterClient manages WebSocket connections.
 // This is the starting point for the websocket connection
 func HandleRegisterClient(ws *websocket.Conn) {
-	if flags.LoadFrontendFlag() == "" {
+	fmt.Println("this must not be empty: ", flags.LoadFrontendFlag())
+	if !flags.HotReloadEnabled() {
 		// only allow websocket to register clients and handle websocket logic
 		// if file operations is used instead of embedded files
 		return
@@ -71,6 +73,7 @@ func listenForInput(ws *websocket.Conn) {
 }
 
 func sendBroadcast() {
+	fmt.Println("something changed")
 	mutex.Lock()
 	defer mutex.Unlock()
 

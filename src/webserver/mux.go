@@ -15,11 +15,13 @@ import (
 // manual swagger generate:
 // swag init --output webserver/website/frontend/out/public/api/swagger --parseDependency
 
-func useWebsite(m *http.ServeMux) {
-	fs := frontend.DefaultFrontend
-	m.HandleFunc("GET /", fs.Serve)
-	m.HandleFunc("GET /{$}", website.FrontPageHandler)
-	m.HandleFunc("GET /invitation/{$}", website.InvitationPageHandler)
+func useWebsite(m *http.ServeMux, newFrontend frontend.Frontend) {
+	render := website.NewRender(newFrontend)
+	// on the files on the frontend is not getting renewed
+	m.HandleFunc("GET /", newFrontend.Serve)
+	m.HandleFunc("GET /{$}", render.FrontPageHandler)
+	m.HandleFunc("GET /invitation/{$}", render.InvitationPageHandler)
+	m.Handle("GET /websocket/hotreload", websocket.Handler(frontend.HandleRegisterClient))
 }
 
 func useApi(m *http.ServeMux) {

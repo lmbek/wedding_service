@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"wedding_service/webserver/website/frontend"
 )
 
 func loadPage(w http.ResponseWriter, tmpl *template.Template, page string) {
@@ -16,10 +15,10 @@ func loadPage(w http.ResponseWriter, tmpl *template.Template, page string) {
 	}
 }
 
-func executePage(w http.ResponseWriter, pagePath string, data any) {
+func executePage(w http.ResponseWriter, render *Render, pagePath string, data any) {
 	tmpl := template.New(pagePath)
 
-	page := fetchPage(w, tmpl, pagePath)
+	page := fetchPage(w, render, tmpl, pagePath)
 	if page == "" {
 		return
 	}
@@ -31,12 +30,12 @@ func executePage(w http.ResponseWriter, pagePath string, data any) {
 }
 
 // fetchPage returns a page based on the path given, if it exists as a file
-func fetchPage(w http.ResponseWriter, tmpl *template.Template, pagePath string) string {
+func fetchPage(w http.ResponseWriter, render *Render, tmpl *template.Template, pagePath string) string {
 	// Check cache first
 	content, exists := ReadCache(pagePath)
 	if exists {
-		loadLayout(w, tmpl)
-		loadComponents(w, tmpl)
+		loadLayout(w, render, tmpl)
+		loadComponents(w, render, tmpl)
 
 		_, err := tmpl.New("page").Parse(content)
 		if err != nil {
@@ -47,10 +46,10 @@ func fetchPage(w http.ResponseWriter, tmpl *template.Template, pagePath string) 
 	}
 
 	// Not in cache: read from FS
-	loadLayout(w, tmpl)
-	loadComponents(w, tmpl)
+	loadLayout(w, render, tmpl)
+	loadComponents(w, render, tmpl)
 
-	filesystem := frontend.DefaultFrontend.GetPrivateFileSystem()
+	filesystem := render.frontend.GetPrivateFileSystem()
 	file, err := filesystem.Open(pagePath)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Template open failed: %s — %v", pagePath, err), http.StatusInternalServerError)

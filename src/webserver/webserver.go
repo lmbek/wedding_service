@@ -21,9 +21,13 @@ type webserver struct {
 	keyPath     string
 }
 
-func NewWebserver() (w Webserver, err error) {
+func NewWebserver(newFrontend frontend.Frontend) (w Webserver, err error) {
+	// TODO: a suggestion could be to use: useHostProtection(mux) and then wrap the mux (maybe)
+
+	initAllowedHosts()
+
 	mux := http.NewServeMux()
-	useWebsite(mux)
+	useWebsite(mux, newFrontend)
 	useApi(mux)
 
 	acmeManager, err := certificate.InitAcme()

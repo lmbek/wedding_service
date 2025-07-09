@@ -4,10 +4,10 @@ import (
 	"net/http"
 )
 
-func FrontPageHandler(w http.ResponseWriter, r *http.Request) {
-	executePage(w, "pages/front_page.gohtml", map[string]string{"Name": "Lars"})
+func (render *Render) FrontPageHandler(w http.ResponseWriter, r *http.Request) {
+	executePage(w, render, "pages/front_page.gohtml", map[string]string{"Name": "Lars"})
 }
 
-func InvitationPageHandler(w http.ResponseWriter, r *http.Request) {
-	executePage(w, "pages/invitation_page.gohtml", map[string]string{"Name": "Lars2"})
+func (render *Render) InvitationPageHandler(w http.ResponseWriter, r *http.Request) {
+	executePage(w, render, "pages/invitation_page.gohtml", map[string]string{"Name": "Lars2"})
 }

@@ -15,8 +15,6 @@ import (
 	"wedding_service/flags"
 )
 
-var DefaultFrontend Frontend = newFrontend()
-
 // frontendEmbedded is the embedded frontend for this application, so performance is high and dependencies lower
 //
 // Example path: go run . -frontend=webserver/website/frontend/out
@@ -41,28 +39,31 @@ type frontend struct {
 
 // NewFrontend uses embedding or the flag for the frontend path
 // example: go run . <insert a flag with an absolute path to directory that holds the frontend>
-func newFrontend() Frontend {
-	frontendFlag := flags.LoadFrontendFlag()
-
+func NewFrontend() Frontend {
 	var frontendPublicFileSystem fs.FS
 	var frontendPrivateFileSystem fs.FS
 	var err error
 
 	// if a frontendFlag is set, then use files dynamically
-	if frontendFlag != "" {
+	if flags.HotReloadEnabled() {
+		// TODO: cleanup
+		fmt.Println("frontend is new")
+		var frontendPath = flags.LoadFrontendFlag()
+		fmt.Println("new frontend")
+		fmt.Println("frontendPath:", frontendPath)
 		fmt.Println("[Frontend] Please note: hotreload enabled. Refresh browser between runs")
-		fmt.Printf("Loading frontend from %s\n", frontendFlag)
-		frontendPublicFileSystem, err = fs.Sub(os.DirFS(frontendFlag), "public")
+		fmt.Printf("Loading frontend from %s\n", frontendPath)
+		frontendPublicFileSystem, err = fs.Sub(os.DirFS(frontendPath), "public")
 		if err != nil {
 			log.Fatalf("could not load public folder: %v\n", err)
 		}
-		frontendPrivateFileSystem, err = fs.Sub(os.DirFS(frontendFlag), "private")
+		frontendPrivateFileSystem, err = fs.Sub(os.DirFS(frontendPath), "private")
 		if err != nil {
 			log.Fatalf("could not load private folder: %v\n", err)
 		}
 
 		// start hot reloader
-		go CheckForModification(frontendFlag)
+		go CheckForModification(frontendPath)
 	} else {
 		fmt.Println("[Frontend] Please note: hotreload disabled. Using embedded frontend! ")
 		// otherwise use embedding
