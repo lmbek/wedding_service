@@ -1,28 +1,33 @@
 services:
-    wedding-go-service: # go service
+    wedding-go-service:
         container_name: wedding-go-service
         image: alpine:3.21.3
         restart: "no"
-        depends_on: # wait for mysql to start before this container
+        depends_on:
             - wedding-mysql-service
         volumes:
             - ./out/docker-volumes/main-service-files:/app
+            - ./src/webserver/website/frontend/out:/frontend
         ports:
             - "${WEDDING_SERVICE_HTTP_PORT}:${WEDDING_SERVICE_HTTP_PORT}"
             - "${WEDDING_SERVICE_HTTPS_PORT}:${WEDDING_SERVICE_HTTPS_PORT}"
-        #env_file:
-        #    - src/.env
+        env_file:
+            - src/.env
         environment:
             - GOOS=linux
             - GOARCH=amd64
         working_dir: /app
-        #command: ./${APP_NAME} # dynamic frontend can only be used if copied over... #-frontend=./webserver/website/frontend/out # development frontend mode
-        command: ./${APP_NAME} -frontend=./webserver/website/frontend/out # development frontend mode
+        command: ./${APP_NAME} -frontend=/frontend
         networks:
             - wedding-network
+        logging:
+            driver: "json-file"  # This captures logs in JSON format from stdout
+            options:
+                max-size: "10m"
+                max-file: "3"
 
-    wedding-mysql-service: # mysql
-        container_name:  wedding-mysql-service
+    wedding-mysql-service: # MySQL
+        container_name: wedding-mysql-service
         image: mysql:8.4.5
         restart: "no"
         volumes:
@@ -35,15 +40,19 @@ services:
             - "${MYSQL_SERVICE_HTTP_PORT}:${MYSQL_SERVICE_HTTP_PORT}"
         networks:
             - wedding-network
-    wedding-prometheus:
+
+    wedding-prometheus: # Prometheus
         container_name: wedding-prometheus
         image: prom/prometheus:latest
         restart: "no"
         ports:
             - "9090:9090"
+        volumes:
+            - ./prometheus.yml:/etc/prometheus/prometheus.yml
         networks:
             - wedding-network
-    wedding-grafana:
+
+    wedding-grafana: # Grafana
         container_name: wedding-grafana
         image: grafana/grafana:latest
         restart: "no"
@@ -51,5 +60,37 @@ services:
             - "3000:3000"
         networks:
             - wedding-network
+        volumes:
+            - ./out/docker-volumes/grafana-data:/var/lib/grafana  # Persist Grafana data
+
+    wedding-promtail: # Promtail for logs
+        container_name: wedding-promtail
+        image: grafana/promtail:latest
+        restart: "no"
+        volumes:
+            - /var/log:/var/log  # Capture logs from Docker containers (stdout/stderr)
+            - ./promtail-config.yml:/etc/promtail/config.yml
+            - ./out/docker-volumes/go-logs:/var/log/go_logs  # Ensure Promtail can access Go logs
+            - /var/lib/docker/containers:/var/lib/docker/containers
+        networks:
+            - wedding-network
+        depends_on:
+            - wedding-go-service
+            - wedding-mysql-service
+            - wedding-prometheus
+            - wedding-grafana
+
+    wedding-loki: # Loki for log aggregation
+        container_name: wedding-loki
+        image: grafana/loki:latest
+        restart: "no"
+        ports:
+            - "3100:3100"
+        networks:
+            - wedding-network
+
 networks:
     wedding-network:
+
+volumes:
+    go-logs: {}  # Named volume for Go logs

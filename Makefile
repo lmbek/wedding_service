@@ -45,16 +45,26 @@ go-build:
 go-build-for-docker:
 	@echo "Copying dependencies..."
 	mkdir -p $(BUILD_DIR)/certificate/self_sign_cert/
-	mkdir -p $(BUILD_DIR)/webserver/website/frontend/
 	cp src/$(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
 	cp src/$(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
-	cp -r src/webserver/website/frontend/* $(BUILD_DIR)/webserver/website/frontend/
 	cp src/.env $(BUILD_DIR)/.env
+	@echo
+
+	@echo "Creating Grafana data volume directory..."
+	# Ensure the grafana-data directory exists before setting permissions
+	mkdir -p ./out/docker-volumes/grafana-data
+	@echo
+
+	@echo "Setting permissions for Grafana data volume..."
+	# Ensure the grafana-data directory has the correct permissions
+	sudo chmod -R 777 ./out/docker-volumes/grafana-data # TODO: find better way of doing this
 	@echo
 
 	@echo "Building $(BUILD_DIR)/$(APP_NAME)"
 	cd src && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=dockerdev -o ../$(BUILD_DIR)/$(APP_NAME) .
 	@echo
+
+
 
 go-build-for-github:
 	@echo "Building $(APP_NAME)"
