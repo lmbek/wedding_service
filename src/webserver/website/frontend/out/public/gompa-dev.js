@@ -3,7 +3,7 @@
 //import PageChanger from "../components/resources/js/pagechanger/pagechanger.js";
 
 if (!window.socket) {
-    window.socket = new WebSocket('ws://localhost:8080/websocket/hotreload');
+    window.socket = new WebSocket('wss://localhost:8443/websocket/hotreload');
 
     window.socket.onmessage = function(event) {
         if (event.data) {
