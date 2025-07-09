@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/swaggo/http-swagger"
 	"golang.org/x/net/websocket"
 	"net/http"
@@ -30,7 +31,7 @@ func useApi(m *http.ServeMux) {
 	m.HandleFunc("GET /api/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "webserver/website/frontend/out/public/api/swagger/swagger.json")
 	})
-	m.Handle("GET /websocket/hotreload", websocket.Handler(frontend.HandleRegisterClient))
+	m.Handle("GET /metrics", promhttp.Handler())
 
 	m.HandleFunc("GET /api/persons/{$}", api.ListPersonsHandler)
 	m.HandleFunc("GET /api/persons/{id}/{$}", api.GetPersonHandler)
