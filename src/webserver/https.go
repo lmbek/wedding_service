@@ -16,7 +16,8 @@ func newHttpsServer(port string, acmeManager *autocert.Manager) (*http.Server, e
 	server.Addr = fmt.Sprintf(":%s", port)
 	server.TLSConfig = &tls.Config{
 		MinVersion: tls.VersionTLS13, // HTTP/2 requires TLS 1.3 or higher
-		NextProtos: []string{"h2"},   // Enforce HTTP/2
+		//NextProtos: []string{"http/1.1"}, // Force HTTP/1.1 to allow Hijacker
+		NextProtos: []string{"h2"}, // Enforce HTTP/2
 	}
 
 	cert, err := certificate.LoadSelfSigned(env.Env.CertPath, env.Env.KeyPath)
