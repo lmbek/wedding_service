@@ -7,6 +7,7 @@ import (
 	"wedding_service/buildtag"
 	"wedding_service/certificate"
 	"wedding_service/env"
+	"wedding_service/webserver/website/frontend"
 )
 
 type Webserver interface {
@@ -41,10 +42,11 @@ func NewWebserver(newFrontend frontend.Frontend) (w Webserver, err error) {
 		return nil, err
 	}
 
-	// TODO: add middleware with protect host names and logging and more to these.
-	// Maybe useMiddleware(httpsServer) and then put handle there etc.
-	httpServer.Handler = acmeManager.HTTPHandler(mux)
-	httpsServer.Handler = mux
+	// TODO: middleware can be collected in one func
+	httpServer.Handler = LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))) //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))))
+	httpsServer.Handler = LoggingAndMetricsMiddleware(mux)                                                        //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(mux))
+	//httpServer.Handler = ProtectHostsMiddleware(LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))))
+	//httpsServer.Handler = ProtectHostsMiddleware(LoggingAndMetricsMiddleware(mux))
 
 	return &webserver{
 		httpServer:  httpServer,
