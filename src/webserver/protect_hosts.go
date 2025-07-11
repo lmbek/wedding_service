@@ -44,19 +44,6 @@ func ProtectHostsMiddleware(next http.Handler) http.Handler {
 			// Block the connection if the host is not allowed
 			fmt.Printf("🔒 Blocking connection from unauthorized host: %s\n", host)
 
-			// Try hijacking the connection and closing it immediately
-			if hj, ok := w.(http.Hijacker); ok {
-				conn, _, err := hj.Hijack()
-				if err == nil {
-					_ = conn.Close()
-					return
-				} else {
-					fmt.Printf("❌ Failed to hijack: %v\n", err)
-				}
-			} else {
-				fmt.Printf("❌ ResponseWriter does not implement http.Hijacker: %T\n", w)
-			}
-
 			// Fallback to returning Forbidden error if hijacking fails
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return

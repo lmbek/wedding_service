@@ -2,15 +2,11 @@ package webserver
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strings"
-	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -101,39 +97,7 @@ func LoggingAndMetricsMiddleware(next http.Handler) http.Handler {
 			r.Body = io.NopCloser(bytes.NewReader(reqBody))
 		}
 
-		// Start measuring the time
-		start := time.Now()
-		rec := &statusRecorder{
-			ResponseWriter: w,
-			status:         http.StatusOK,
-			body:           bytes.NewBuffer([]byte{}),
-		}
-
 		// Proceed with request processing and track metrics
-		next.ServeHTTP(rec, r)
-
-		// Calculate request duration
-		duration := time.Since(start).Seconds()
-		statusStr := fmt.Sprintf("%d", rec.status)
-
-		// Record Prometheus metrics
-		requestDuration.WithLabelValues(r.Method, r.URL.Path, statusStr).Observe(duration)
-		requestCount.WithLabelValues(r.Method, r.URL.Path, statusStr).Inc()
-
-		// Log the expanded request data with bodies included
-		log.Printf(
-			"Method: %s | Path: %s | Status: %s | Duration: %.3fs | IP: %s | User-Agent: %s | Query Params: %s | Headers: %v | Request Body: %s | Response Body: %s | Content-Length: %d\n",
-			r.Method,
-			r.URL.Path,
-			statusStr,
-			duration,
-			r.RemoteAddr,
-			r.UserAgent(),
-			r.URL.RawQuery,
-			r.Header,
-			string(reqBody),   // Request body (captured)
-			rec.body.String(), // Response body (captured)
-			r.ContentLength,
-		)
+		next.ServeHTTP(w, r)
 	})
 }

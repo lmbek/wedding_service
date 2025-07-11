@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"wedding_service/flags"
 )
 
 var EnvPath = ".env"
@@ -24,6 +25,8 @@ type environment struct {
 var mutex sync.RWMutex
 
 func Init() error {
+	flags.LoadFrontendFlag()
+
 	// TODO: make a lock for all getters and setters, and then also test if godotenv in general has race conditions
 	mutex.Lock()
 	defer mutex.Unlock()
