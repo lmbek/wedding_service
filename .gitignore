@@ -12,3 +12,8 @@ coverage.out
 *.pem
 *.out
 wedding-go-service
+
+swagger/docs.go
+go.sum
+swagger/swagger.json
+swagger/swagger.yaml
