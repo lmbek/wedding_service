@@ -32,7 +32,7 @@ jobs:
         run: echo -e "\nGOOS=linux" >> .env
 
       - name: Install swag CLI
-        run: go install github.com/swaggo/swag/cmd/swag@v1.16.5
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.4
         working-directory: src
 
       - name: Run go generate using Makefile
