@@ -13,7 +13,6 @@ coverage.out
 *.out
 wedding-go-service
 
-swagger/docs.go
-go.sum
-swagger/swagger.json
-swagger/swagger.yaml
+/src/webserver/website/frontend/out/public/api/swagger/docs.go
+/src/webserver/website/frontend/out/public/api/swagger/swagger.json
+/src/webserver/website/frontend/out/public/api/swagger/swagger.yaml
