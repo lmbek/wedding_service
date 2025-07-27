@@ -5,13 +5,13 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"wedding_service/env"
+	"wedding_service/config"
 )
 
 var allowedHostsMap map[string]struct{}
 
-func initAllowedHosts() {
-	raw := env.Env.Hostnames // map[string][]string
+func initAllowedHosts(config config.Config) {
+	raw := config.Hostnames() // map[string][]string
 	allowedHostsMap = make(map[string]struct{})
 
 	// Populate the allowed hosts map from env config

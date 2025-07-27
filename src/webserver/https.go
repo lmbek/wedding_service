@@ -3,14 +3,12 @@ package webserver
 import (
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/crypto/acme/autocert"
 	"net/http"
 	"wedding_service/buildtag"
-	"wedding_service/certificate"
-	"wedding_service/env"
+	"wedding_service/webserver/certificate"
 )
 
-func newHttpsServer(port string, acmeManager *autocert.Manager) (*http.Server, error) {
+func newHttpsServer(certPath string, keyPath string, port string, acmeManager certificate.AutoCertManager) (*http.Server, error) {
 	server := &http.Server{}
 
 	server.Addr = fmt.Sprintf(":%s", port)
@@ -20,7 +18,7 @@ func newHttpsServer(port string, acmeManager *autocert.Manager) (*http.Server, e
 		NextProtos: []string{"h2"}, // Enforce HTTP/2
 	}
 
-	cert, err := certificate.LoadSelfSigned(env.Env.CertPath, env.Env.KeyPath)
+	cert, err := acmeManager.LoadSelfSigned(certPath, keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not use localhost certificate: %w", err)
 	}

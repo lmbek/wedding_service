@@ -11,7 +11,7 @@ import (
 // loadComponents parses all *.gohtml in the components dir into baseTmpl.
 func loadComponents(w http.ResponseWriter, render *Render, baseTmpl *template.Template) {
 
-	privateFS := render.frontend.GetPrivateFileSystem()
+	privateFS := render.frontend.PrivateFS()
 
 	err := fs.WalkDir(privateFS, "components", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {

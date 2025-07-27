@@ -5,53 +5,62 @@ import (
 	"fmt"
 	"net/http"
 	"wedding_service/buildtag"
-	"wedding_service/certificate"
-	"wedding_service/env"
+	"wedding_service/config"
+	"wedding_service/webserver/certificate"
 	"wedding_service/webserver/website/frontend"
 )
 
 type Webserver interface {
+	init() (Webserver, error)
 	ListenAndServe() error
 	Close() error
 }
 
 type webserver struct {
+	config      config.Config
+	frontend    frontend.Frontend
 	httpServer  *http.Server
 	httpsServer *http.Server
-	certPath    string
-	keyPath     string
 }
 
-func NewWebserver(newFrontend frontend.Frontend) (w Webserver, err error) {
+func NewWebserver(config config.Config, frontend frontend.Frontend) (Webserver, error) {
+	w := &webserver{
+		config:   config,
+		frontend: frontend,
+	}
+	return w.init()
+}
+
+func (w *webserver) init() (Webserver, error) {
 	// TODO: a suggestion could be to use: useHostProtection(mux) and then wrap the mux (maybe)
 
-	initAllowedHosts()
+	initAllowedHosts(w.config)
 
 	mux := http.NewServeMux()
-	useWebsite(mux, newFrontend)
-	useApi(mux)
+	useWebsite(w.config, mux, w.frontend)
+	useApi(w.config, mux)
 
-	acmeManager, err := certificate.InitAcme()
+	acmeManager, err := certificate.NewAutoCertManager(w.config)
 	if err != nil {
 		return nil, fmt.Errorf("could not use acme manager: %w", err)
 	}
 
-	httpServer := newHttpServer(env.Env.HttpPort)
-	httpsServer, err := newHttpsServer(env.Env.HttpsPort, acmeManager)
+	httpServer := newHttpServer(w.config.HttpPort())
+	httpsServer, err := newHttpsServer(w.config.CertPath(), w.config.KeyPath(), w.config.HttpsPort(), acmeManager)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: middleware can be collected in one func
-	httpServer.Handler = LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))) //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))))
-	httpsServer.Handler = LoggingAndMetricsMiddleware(mux)                                                        //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(mux))
+	httpServer.Handler = LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(w.config.HttpsPort()))) //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))))
+	httpsServer.Handler = LoggingAndMetricsMiddleware(mux)                                                           //ProtectHostsMiddleware(LoggingAndMetricsMiddleware(mux))
 	//httpServer.Handler = ProtectHostsMiddleware(LoggingAndMetricsMiddleware(acmeManager.HTTPHandler(redirectToHTTPS(env.Env.HttpsPort))))
 	//httpsServer.Handler = ProtectHostsMiddleware(LoggingAndMetricsMiddleware(mux))
 
-	return &webserver{
-		httpServer:  httpServer,
-		httpsServer: httpsServer,
-	}, nil
+	w.httpServer = httpServer
+	w.httpsServer = httpsServer
+
+	return w, nil
 }
 
 func (w *webserver) ListenAndServe() error {
@@ -69,8 +78,8 @@ func (w *webserver) ListenAndServe() error {
 }
 
 func (w *webserver) listenHTTPS() error {
-	if env.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
-		fmt.Println("Listening on", fmt.Sprintf("https://localhost:%s", env.Env.HttpsPort))
+	if w.config.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
+		fmt.Println("Listening on", fmt.Sprintf("https://localhost:%s", w.config.HttpsPort()))
 	}
 
 	// Listen and serve HTTPS / TLS
@@ -84,8 +93,8 @@ func (w *webserver) listenHTTPS() error {
 }
 
 func (w *webserver) listenHTTP() error {
-	if env.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
-		fmt.Println("Listening on", fmt.Sprintf("http://localhost:%s", env.Env.HttpPort))
+	if w.config.IsDebugInfoEnabled() && buildtag.IsDevelopment() {
+		fmt.Println("Listening on", fmt.Sprintf("http://localhost:%s", w.config.HttpPort()))
 	}
 
 	// Listen and serve HTTP

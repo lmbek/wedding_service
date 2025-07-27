@@ -3,14 +3,13 @@ package website
 import (
 	"fmt"
 	"sync"
-	"wedding_service/flags"
 )
 
 var cacheMu sync.RWMutex
 var pageCache = make(map[string]string)
 
-func ReadCache(path string) (string, bool) {
-	if !flags.TemplateCachingEnabled() {
+func ReadCache(templateCachingEnabled bool, path string) (string, bool) {
+	if !templateCachingEnabled {
 		return "", false
 	}
 	fmt.Println("read cache")
@@ -20,8 +19,8 @@ func ReadCache(path string) (string, bool) {
 	return page, ok
 }
 
-func UpdateCache(path string, page string) bool {
-	if !flags.TemplateCachingEnabled() {
+func UpdateCache(templateCachingEnabled bool, path string, page string) bool {
+	if !templateCachingEnabled {
 		return false
 	}
 	fmt.Println("updated cache")

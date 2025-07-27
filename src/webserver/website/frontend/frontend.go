@@ -12,86 +12,113 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"wedding_service/flags"
 )
 
 // frontendEmbedded is the embedded frontend for this application, so performance is high and dependencies lower
 //
-// Example path: go run . -frontend=webserver/website/frontend/out
+// Example path: go run . -frontend=webserver/website/frontend/out -hotreload=true
 //
 //go:embed out/public/*
-var frontendEmbeddedPublic embed.FS
+var publicEmbeddedFS embed.FS
 
 //go:embed out/private/*
-var frontendEmbeddedPrivate embed.FS
+var privateEmbeddedFS embed.FS
 
 type Frontend interface {
+	load(frontendPath string) (Frontend, error)
 	Serve(w http.ResponseWriter, r *http.Request)
-	GetPublicFileSystem() fs.FS
-	GetPrivateFileSystem() fs.FS
+	PublicFS() fs.FS
+	PrivateFS() fs.FS
 }
 
 type frontend struct {
-	publicFilesystem  fs.FS
-	privateFilesystem fs.FS
-	handler           http.Handler
+	hotReloadEnabled bool
+	handler          http.Handler
+	publicFS         fs.FS
+	privateFS        fs.FS
 }
 
 // NewFrontend uses embedding or the flag for the frontend path
 // example: go run . <insert a flag with an absolute path to directory that holds the frontend>
-func NewFrontend() Frontend {
-	var frontendPublicFileSystem fs.FS
-	var frontendPrivateFileSystem fs.FS
+func NewFrontend(path string, hotReloadEnabled bool) (Frontend, error) {
+	f := &frontend{
+		hotReloadEnabled: hotReloadEnabled,
+	}
+	return f.load(path)
+}
+
+func (f *frontend) load(frontendPath string) (Frontend, error) {
+	if frontendPath == "" {
+		return f, f.UseEmbedded()
+	}
+	return f, f.useFileBased(frontendPath)
+}
+
+func (f *frontend) useFileBased(frontendPath string) error {
+	var publicFS fs.FS
+	var privateFS fs.FS
 	var err error
 
-	// if a frontendFlag is set, then use files dynamically
-	if flags.HotReloadEnabled() {
-		// TODO: cleanup
-		fmt.Println("frontend is new")
-		var frontendPath = flags.LoadFrontendFlag()
-		fmt.Println("new frontend")
-		fmt.Println("frontendPath:", frontendPath)
+	publicFS, err = fs.Sub(os.DirFS(frontendPath), "public")
+	if err != nil {
+		log.Fatalf("could not load public folder: %v\n", err)
+		return err
+	}
+	privateFS, err = fs.Sub(os.DirFS(frontendPath), "private")
+	if err != nil {
+		log.Fatalf("could not load private folder: %v\n", err)
+		return err
+	}
+
+	if f.hotReloadEnabled {
 		fmt.Println("[Frontend] Please note: hotreload enabled. Refresh browser between runs")
-		fmt.Printf("Loading frontend from %s\n", frontendPath)
-		frontendPublicFileSystem, err = fs.Sub(os.DirFS(frontendPath), "public")
-		if err != nil {
-			log.Fatalf("could not load public folder: %v\n", err)
-		}
-		frontendPrivateFileSystem, err = fs.Sub(os.DirFS(frontendPath), "private")
-		if err != nil {
-			log.Fatalf("could not load private folder: %v\n", err)
-		}
 
 		// start hot reloader
 		go CheckForModification(frontendPath)
-	} else {
-		fmt.Println("[Frontend] Please note: hotreload disabled. Using embedded frontend! ")
-		// otherwise use embedding
-		frontendPublicFileSystem, err = fs.Sub(frontendEmbeddedPublic, "out/public")
-		if err != nil {
-			log.Fatalf("embedding did not work as we did not have a directory: %v\n", err)
-		}
-		frontendPrivateFileSystem, err = fs.Sub(frontendEmbeddedPrivate, "out/private")
-		if err != nil {
-			log.Fatalf("embedding did not work as we did not have a directory: %v\n", err)
-		}
 	}
 
-	return &frontend{
-		publicFilesystem:  frontendPublicFileSystem,
-		privateFilesystem: frontendPrivateFileSystem,
-		handler: http.FileServer(
-			NewFileSystem(http.FS(frontendPublicFileSystem), false, false),
-		),
+	// expose only the public part as a fileserver with a handler
+	f.handler = http.FileServer(
+		NewFileSystem(http.FS(publicFS), false, false),
+	)
+	f.publicFS = publicFS
+	f.privateFS = privateFS
+
+	return nil
+}
+
+func (f *frontend) UseEmbedded() error {
+	var publicFS fs.FS
+	var privateFS fs.FS
+	var err error
+	fmt.Println("[Frontend] Please note: hotreload disabled. Using embedded frontend! ")
+	// otherwise use embedding
+	publicFS, err = fs.Sub(publicEmbeddedFS, "out/public")
+	if err != nil {
+		log.Fatalf("embedding did not work as we did not have a directory: %v\n", err)
+		return err
 	}
+	privateFS, err = fs.Sub(privateEmbeddedFS, "out/private")
+	if err != nil {
+		log.Fatalf("embedding did not work as we did not have a directory: %v\n", err)
+		return err
+	}
+
+	// expose only the public part as a fileserver with a handler
+	f.handler = http.FileServer(
+		NewFileSystem(http.FS(publicFS), false, false),
+	)
+	f.publicFS = publicFS
+	f.privateFS = privateFS
+	return nil
 }
 
-func (f *frontend) GetPublicFileSystem() fs.FS {
-	return f.publicFilesystem
+func (f *frontend) PublicFS() fs.FS {
+	return f.publicFS
 }
 
-func (f *frontend) GetPrivateFileSystem() fs.FS {
-	return f.privateFilesystem
+func (f *frontend) PrivateFS() fs.FS {
+	return f.privateFS
 }
 
 func (f *frontend) Serve(w http.ResponseWriter, r *http.Request) {

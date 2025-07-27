@@ -32,7 +32,7 @@ func executePage(w http.ResponseWriter, render *Render, pagePath string, data an
 // fetchPage returns a page based on the path given, if it exists as a file
 func fetchPage(w http.ResponseWriter, render *Render, tmpl *template.Template, pagePath string) string {
 	// Check cache first
-	content, exists := ReadCache(pagePath)
+	content, exists := ReadCache(!render.config.HotReloadEnabled(), pagePath)
 	if exists {
 		loadLayout(w, render, tmpl)
 		loadComponents(w, render, tmpl)
@@ -49,7 +49,7 @@ func fetchPage(w http.ResponseWriter, render *Render, tmpl *template.Template, p
 	loadLayout(w, render, tmpl)
 	loadComponents(w, render, tmpl)
 
-	filesystem := render.frontend.GetPrivateFileSystem()
+	filesystem := render.frontend.PrivateFS()
 	file, err := filesystem.Open(pagePath)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Template open failed: %s — %v", pagePath, err), http.StatusInternalServerError)
@@ -70,6 +70,6 @@ func fetchPage(w http.ResponseWriter, render *Render, tmpl *template.Template, p
 		return ""
 	}
 
-	UpdateCache(pagePath, page)
+	UpdateCache(!render.config.HotReloadEnabled(), pagePath, page)
 	return page
 }

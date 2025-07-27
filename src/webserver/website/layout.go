@@ -8,7 +8,7 @@ import (
 )
 
 func loadLayout(w http.ResponseWriter, render *Render, tmpl *template.Template) {
-	file, err := render.frontend.GetPrivateFileSystem().Open("layouts/bryllup.gohtml")
+	file, err := render.frontend.PrivateFS().Open("layouts/bryllup.gohtml")
 	if err != nil {
 		http.Error(w, "failed to open layout: "+err.Error(), http.StatusInternalServerError)
 		return

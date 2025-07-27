@@ -1,31 +1,24 @@
 package main
 
-import (
-	"fmt"
-	"wedding_service/env"
-	"wedding_service/webserver"
-	"wedding_service/webserver/website/frontend"
-)
-
-func Example_main() {
-	err := env.Init()
-	if err != nil {
-		fmt.Printf("could not env.Init(): %v", err)
-		return
-	}
-
-	w, err := webserver.NewWebserver(frontend.NewFrontend())
-	if err != nil {
-		fmt.Printf("could not webserver.NewWebserver(): %v", err)
-		return
-	}
-
-	err = w.ListenAndServe()
-	if err != nil {
-		fmt.Printf("%s", fmt.Errorf("could not w.ListenAndServe(): %w", err))
-		return
-	}
-}
+//func Example_main() {
+//	err := env.Init()
+//	if err != nil {
+//		fmt.Printf("could not env.Init(): %v", err)
+//		return
+//	}
+//
+//	w, err := webserver.NewWebserver(frontend.NewFrontend())
+//	if err != nil {
+//		fmt.Printf("could not webserver.NewWebserver(): %v", err)
+//		return
+//	}
+//
+//	err = w.ListenAndServe()
+//	if err != nil {
+//		fmt.Printf("%s", fmt.Errorf("could not w.ListenAndServe(): %w", err))
+//		return
+//	}
+//}
 
 //func Test_main(t *testing.T) {
 //	err := env.Init()

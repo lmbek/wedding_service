@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"sync"
-	"wedding_service/flags"
 )
 
 var (
@@ -34,22 +33,26 @@ func removeClient(ws *websocket.Conn) {
 
 // HandleRegisterClient manages WebSocket connections.
 // This is the starting point for the websocket connection
-func HandleRegisterClient(ws *websocket.Conn) {
-	fmt.Println("this must not be empty: ", flags.LoadFrontendFlag())
-	if !flags.HotReloadEnabled() {
-		// only allow websocket to register clients and handle websocket logic
-		// if file operations is used instead of embedded files
+func HandleRegisterClient(ws *websocket.Conn, frontendPath string, hotReloadEnabled bool) {
+	if hotReloadEnabled {
+		if frontendPath == "" {
+			log.Println("Frontend path must be set when hot reload is enabled")
+			return
+		}
+
+		addClientToClientList(ws) // add client to the global client list
+		defer removeClient(ws)    // remove client when it is done listening
+		listenForInput(ws)        // this is a blocking call
 		return
 	}
+	return
+}
 
+func addClientToClientList(ws *websocket.Conn) {
 	mutex.Lock()
 	log.Println("Client connected:", ws.RemoteAddr())
 	clients[ws] = true
 	mutex.Unlock()
-
-	defer removeClient(ws)
-
-	listenForInput(ws) // this is a blocking call
 }
 
 // listenForInput is a blocking function that holds the connection to handle websocket functionality
