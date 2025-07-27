@@ -6,7 +6,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/swag v1.16.4 // don't upgrade to 1.16.5, super unstable
 	golang.org/x/crypto v0.40.0
 	golang.org/x/net v0.42.0
 )
