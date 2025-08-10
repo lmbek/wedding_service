@@ -23,17 +23,15 @@ jobs:
 
       - name: Download dependencies
         run: go mod download
-        working-directory: src
 
       - name: Copy .env.example to .env
-        run: cp src/.env.example src/.env
+        run: cp .env.example .env
 
       - name: Set environment variable GOOS=linux in .env
         run: echo -e "\nGOOS=linux" >> .env
 
       - name: Install swag CLI
         run: go install github.com/swaggo/swag/cmd/swag@v1.16.4 # don't upgrade to 1.16.5, super unstable
-        working-directory: src
 
       - name: Run go generate using Makefile
         run: make go-generate
@@ -48,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: src/coverage.out
+          path: coverage.out
 
       - name: Run benchmarks
         run: make bench

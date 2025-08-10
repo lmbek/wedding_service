@@ -1,6 +1,6 @@
 # Load .env variables
-ifneq (,$(wildcard src/.env))
-	include src/.env
+ifneq (,$(wildcard .env))
+	include .env
 	export
 endif
 
@@ -10,65 +10,49 @@ all: docker-stop rm-executable go-build-for-docker run-as-daemon
 generate: go-generate
 
 go-generate:
-	cd src && go generate -tags self_sign_cert ./...
+	cd services/wedding_service && go generate -tags self_sign_cert ./...
 
 go-generate-cert:
 	@echo "Running go generate..."
-	cd src && go generate -tags self_sign_cert certificate/self_sign_cert/self_sign_cert.go
+	cd services/wedding_service && go generate -tags self_sign_cert webserver/certificate/self_sign_cert/self_sign_cert.go
 	@echo
 
 go-generate-swagger:
 	@echo "Running go generate..."
-	cd src && go generate src/webserver/mux.go
+	cd services/wedding_service && go generate webserver/mux.go
 	@echo
 
 down: docker-stop
 
 docker-stop:
 	@echo "Stopping Docker containers..."
-	docker-compose down
+	docker-compose down --remove-orphans
 	@echo
 
 rm-executable:
 	@echo "Cleaning build artifacts..."
-	rm -f $(BUILD_DIR)/$(APP_NAME)
+	rm -f bin/$(APP_NAME)
 	@echo
 
 build: go-build
 
 go-build:
 	@echo "Go building..."
-	@echo "Building out/$(APP_NAME)"
-	CGO_ENABLED=0 go build -o out/$(APP_NAME) .
+	@echo "Building bin/$(APP_NAME) from services/wedding_service"
+	mkdir -p bin
+	cd services/wedding_service && CGO_ENABLED=0 go build -o ../../bin/$(APP_NAME) .
 	@echo
 
 go-build-for-docker:
-	@echo "Copying dependencies..."
-	mkdir -p $(BUILD_DIR)/certificate/self_sign_cert/
-	cp src/$(SELF_SIGNED_CERT_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
-	cp src/$(SELF_SIGNED_KEY_PATH) $(BUILD_DIR)/certificate/self_sign_cert/
-	cp src/.env $(BUILD_DIR)/.env
-	@echo
-
-	@echo "Creating Grafana data volume directory..."
-	# Ensure the grafana-data directory exists before setting permissions
-	mkdir -p ./out/docker-volumes/grafana-data
-	@echo
-
-	@echo "Setting permissions for Grafana data volume..."
-	# Ensure the grafana-data directory has the correct permissions
-	sudo chmod -R 777 ./out/docker-volumes/grafana-data # TODO: find better way of doing this
-	@echo
-
-	@echo "Building $(BUILD_DIR)/$(APP_NAME)"
-	cd src && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=dockerdev -o ../$(BUILD_DIR)/$(APP_NAME) .
+	@echo "Building Docker images for services..."
+	docker-compose build gateway_service wedding_service
 	@echo
 
 
 
 go-build-for-github:
-	@echo "Building $(APP_NAME)"
-	cd src && CGO_ENABLED=0 go build -o $(APP_NAME) . #github don't need a build directory, we just test if it can build
+	@echo "Building $(APP_NAME) from services/wedding_service"
+	cd services/wedding_service && CGO_ENABLED=0 go build -o ../../$(APP_NAME) .
 	@echo
 
 docker-build:
@@ -84,54 +68,55 @@ run-as-daemon:
 run: go-run
 
 go-run:
-	@echo "Running go"
-	cd src && go run .
+	@echo "Running wedding_service"
+	cd services/wedding_service && go run .
 	@echo
 
 test: go-test
 
 go-test:
-	@echo "Running all tests"
-	cd src && go test -count=1 ./...
+	@echo "Running all tests for wedding_service module"
+	cd services/wedding_service && go test -count=1 ./...
 	@echo
 
 test-v: go-test-v
 
 go-test-v:
-	@echo "Running all tests"
-	cd src && go test -count=1 -v ./...
+	@echo "Running all tests (verbose) for wedding_service module"
+	cd services/wedding_service && go test -count=1 -v ./...
 	@echo
 
 test-cached: go-test-cached
 
 go-test-cached:
-	@echo "Running all tests"
-	cd src && go test ./...
+	@echo "Running cached tests for wedding_service module"
+	cd services/wedding_service && go test ./...
 	@echo
 
 test-coverage: go-test-coverage
 
 go-test-coverage:
-	@echo "Running tests with coverage excluding swagger package"
-	cd src && go test -coverprofile=coverage-raw.out ./...
-	cd src && grep -v "/swagger/" coverage-raw.out > coverage.out # filter out things that should not be covered
-	cd src && go tool cover -func=coverage.out
+	@echo "Running tests with coverage (excluding swagger) for wedding_service module"
+	cd services/wedding_service && go test -coverprofile=coverage-raw.out ./...
+	cd services/wedding_service && grep -v "/swagger/" coverage-raw.out > coverage.out || true
+	cd services/wedding_service && go tool cover -func=coverage.out
+	cp services/wedding_service/coverage.out ./coverage.out
 	@echo "To view HTML coverage report, run:"
-	@echo "  cd src && go tool cover -html=coverage.out"
+	@echo "  (cd services/wedding_service && go tool cover -html=coverage.out)"
 	@echo
 
 test-coverage-html: go-test-coverage-html
 
 go-test-coverage-html: test-coverage
 	@echo "Viewing test coverage as html"
-	cd src && go tool cover -html=coverage.out
+	cd services/wedding_service && go tool cover -html=coverage.out
 
 bench: go-bench
 
 go-bench:
-	@echo "Running benchmarks"
+	@echo "Running benchmarks for wedding_service module"
 	@rm -f cpu.prof mem.prof block.prof mutex.prof trace.out goroutine.prof
-	cd src && go test -bench=. -run=^$$ -benchtime=5s -benchmem \
+	cd services/wedding_service && go test -bench=. -run=^$$ -benchtime=5s -benchmem \
 		-cpuprofile=cpu.prof \
 		-memprofile=mem.prof \
 		-blockprofile=block.prof \
@@ -143,38 +128,38 @@ bench-analysis: go-bench analysis
 
 analysis:
 	@echo "Analyzing CPU profile..."
-	@go tool pprof -top cpu.prof
+	@cd services/wedding_service && go tool pprof -top cpu.prof
 	@echo "Analyzing memory profile..."
-	@go tool pprof -top mem.prof
+	@cd services/wedding_service && go tool pprof -top mem.prof
 	@echo "Analyzing mutex profile..."
-	@go tool pprof -top mutex.prof
+	@cd services/wedding_service && go tool pprof -top mutex.prof
 	@echo "Analyzing block profile..."
-	@go tool pprof -top block.prof
+	@cd services/wedding_service && go tool pprof -top block.prof
 	@echo "To view detailed profiles:"
-	@echo "  CPU:       go tool pprof -http=:8080 cpu.prof"
-	@echo "  Mem:       go tool pprof -http=:8080 mem.prof"
-	@echo "  Mutex:     go tool pprof -http=:8080 mutex.prof"
-	@echo "  Block:     go tool pprof -http=:8080 block.prof"
-	@echo "  Trace:     go tool trace trace.out"
+	@echo "  CPU:       (cd services/wedding_service && go tool pprof -http=:9090 cpu.prof)"
+	@echo "  Mem:       (cd services/wedding_service && go tool pprof -http=:9090 mem.prof)"
+	@echo "  Mutex:     (cd services/wedding_service && go tool pprof -http=:9090 mutex.prof)"
+	@echo "  Block:     (cd services/wedding_service && go tool pprof -http=:9090 block.prof)"
+	@echo "  Trace:     (cd services/wedding_service && go tool trace trace.out)"
 
 race: go-race
 
 go-race:
-	@echo "Testing for race conditions"
-	cd src && go test -count=1 -race ./...
+	@echo "Testing for race conditions (wedding_service module)"
+	cd services/wedding_service && go test -count=1 -race ./...
 	@echo "Race test completed."
 
 
 race-v: go-race-v
 
 go-race-v:
-	@echo "Testing for race conditions"
-	cd src && go test -count=1 -race -v ./...
+	@echo "Testing for race conditions (verbose, wedding_service module)"
+	cd services/wedding_service && go test -count=1 -race -v ./...
 	@echo "Race test completed."
 
 fuzz: go-fuzz
 
 go-fuzz:
-	@echo "Running fuzz tests"
-	cd src && go test -fuzz=Fuzz -fuzztime=10s
+	@echo "Running fuzz tests (wedding_service module)"
+	cd services/wedding_service && go test -fuzz=Fuzz -fuzztime=10s
 	@echo "Fuzz test completed."

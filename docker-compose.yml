@@ -1,96 +1,53 @@
 services:
-    wedding-go-service:
-        container_name: wedding-go-service
-        image: alpine:3.21.3
-        restart: "no"
-        depends_on:
-            - wedding-mysql-service
-        volumes:
-            - ./out/docker-volumes/main-service-files:/app
-            - ./src/webserver/website/frontend/out:/frontend
-        ports:
-            - "${WEDDING_SERVICE_HTTP_PORT}:${WEDDING_SERVICE_HTTP_PORT}"
-            - "${WEDDING_SERVICE_HTTPS_PORT}:${WEDDING_SERVICE_HTTPS_PORT}"
-        env_file:
-            - src/.env
-        environment:
-            - GOOS=linux
-            - GOARCH=amd64
-        working_dir: /app
-        command: ./${APP_NAME} -frontend=/frontend
-        networks:
-            - wedding-network
-        logging:
-            driver: "json-file"  # This captures logs in JSON format from stdout
-            options:
-                max-size: "10m"
-                max-file: "3"
+  gateway_service:
+    container_name: gateway_service
+    build:
+      context: .
+      dockerfile: services/gateway_service/Dockerfile
+    restart: "no"
+    depends_on:
+      - wedding_service
+      - tinyserver
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ./.docker/gateway_service
+        target: /data
+    env_file:
+      - .env
+    networks:
+      - wedding-network
 
-    wedding-mysql-service: # MySQL
-        container_name: wedding-mysql-service
-        image: mysql:8.4.5
-        restart: "no"
-        volumes:
-            - ./out/docker-volumes/mysql-data:/var/lib/mysql
-        env_file:
-            - src/.env
-        environment:
-            - "MYSQL_ROOT_PASSWORD=${MYSQL_SERVICE_ROOT_PASSWORD}"
-        ports:
-            - "${MYSQL_SERVICE_HTTP_PORT}:${MYSQL_SERVICE_HTTP_PORT}"
-        networks:
-            - wedding-network
+  wedding_service:
+    container_name: wedding_service
+    build:
+      context: .
+      dockerfile: services/wedding_service/Dockerfile
+    restart: "no"
+    expose:
+      - "${WEDDING_SERVICE_HTTP_PORT}"
+    volumes:
+      - type: bind
+        source: ./.docker/wedding_service
+        target: /data
+    env_file:
+      - .env
+    networks:
+      - wedding-network
 
-    wedding-prometheus: # Prometheus
-        container_name: wedding-prometheus
-        image: prom/prometheus:latest
-        restart: "no"
-        ports:
-            - "9090:9090"
-        volumes:
-            - ./prometheus.yml:/etc/prometheus/prometheus.yml
-        networks:
-            - wedding-network
-
-    wedding-grafana: # Grafana
-        container_name: wedding-grafana
-        image: grafana/grafana:latest
-        restart: "no"
-        ports:
-            - "3000:3000"
-        networks:
-            - wedding-network
-        volumes:
-            - ./out/docker-volumes/grafana-data:/var/lib/grafana  # Persist Grafana data
-
-    wedding-promtail: # Promtail for logs
-        container_name: wedding-promtail
-        image: grafana/promtail:latest
-        restart: "no"
-        volumes:
-            - /var/log:/var/log  # Capture logs from Docker containers (stdout/stderr)
-            - ./promtail-config.yml:/etc/promtail/config.yml
-            - ./out/docker-volumes/go-logs:/var/log/go_logs  # Ensure Promtail can access Go logs
-            - /var/lib/docker/containers:/var/lib/docker/containers
-        networks:
-            - wedding-network
-        depends_on:
-            - wedding-go-service
-            - wedding-mysql-service
-            - wedding-prometheus
-            - wedding-grafana
-
-    wedding-loki: # Loki for log aggregation
-        container_name: wedding-loki
-        image: grafana/loki:latest
-        restart: "no"
-        ports:
-            - "3100:3100"
-        networks:
-            - wedding-network
+  tinyserver:
+    container_name: tinyserver
+    build:
+      context: .
+      dockerfile: services/tinyserver/Dockerfile
+    restart: "no"
+    expose:
+      - "80"
+    networks:
+      - wedding-network
 
 networks:
-    wedding-network:
-
-volumes:
-    go-logs: {}  # Named volume for Go logs
+  wedding-network:
+    driver: bridge
