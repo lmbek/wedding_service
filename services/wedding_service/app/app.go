@@ -17,11 +17,11 @@ type App interface {
 	Start() error
 
 	// Shutdown gracefully shuts down the application
-	Shutdown() error
+	Shutdown(ctx context.Context) error
 }
 
 // application is the implementation of the App interface
-type application struct {
+type app struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	config    config.Config
@@ -30,7 +30,7 @@ type application struct {
 }
 
 // NewApp creates a new application instance
-func NewApp(ctx context.Context) (App, error) {
+func NewApp() (App, error) {
 	// Initialize the environment
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -38,7 +38,7 @@ func NewApp(ctx context.Context) (App, error) {
 	}
 
 	// Create a context that will be canceled on SIGINT or SIGTERM
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Set up signal handling
 	signalChan := make(chan os.Signal, 1)
@@ -49,20 +49,22 @@ func NewApp(ctx context.Context) (App, error) {
 		cancel()
 	}()
 
-	app := &application{
+	app := &app{
 		ctx:    ctx,
 		cancel: cancel,
 		config: cfg,
 	}
 
-	if err := app.initialize(); err != nil {
+	err = app.initialize()
+
+	if err != nil {
 		return nil, err
 	}
 	return app, nil
 }
 
 // Initialize initializes all components of the application
-func (a *application) initialize() error {
+func (a *app) initialize() error {
 	var err error
 	// Initialize logging (slog)
 	//if err = logging.Init("wedding_service", a.config.DebugLevel()); err != nil {
@@ -85,7 +87,7 @@ func (a *application) initialize() error {
 }
 
 // Start starts the application and blocks until it's stopped
-func (a *application) Start() error {
+func (a *app) Start() error {
 	// Start the webserver in a goroutine
 	go func() {
 		if err := a.webserver.ListenAndServe(); err != nil {
@@ -100,11 +102,11 @@ func (a *application) Start() error {
 	// Wait for context cancellation (from signal or error)
 	<-a.ctx.Done()
 
-	return a.Shutdown()
+	return nil
 }
 
 // Shutdown gracefully shuts down the application
-func (a *application) Shutdown() error {
+func (a *app) Shutdown(ctx context.Context) error {
 	slog.Info("Shutting down application")
 
 	// Close the webserver

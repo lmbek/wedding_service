@@ -3,6 +3,7 @@ package config
 import (
 	"gateway_service/config/env"
 	"os"
+	"strings"
 )
 
 type Config interface {
@@ -31,9 +32,15 @@ func NewConfig() (Config, error) {
 		backends = map[string]string{"localhost": "http://tinyserver"}
 	}
 
+	hosts := os.Getenv("GATEWAY_HOSTNAMES")
+	if strings.TrimSpace(hosts) == "" {
+		// default allow both localhost and wedding-go-service hostnames
+		hosts = "localhost|wedding-go-service"
+	}
+
 	return &config{
 		env:       e,
-		hostnames: parseHostnames("localhost"), // certificate host policy
+		hostnames: parseHostnames(hosts), // certificate host policy
 		backends:  backends,
 	}, nil
 }

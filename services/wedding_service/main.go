@@ -1,13 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"log/slog"
+	"wedding_service/app"
+)
 
 func main() {
-	fmt.Println("Hello, world! im batman")
-	//a, err := app.NewApp(context.Background())
-	//if err != nil {
-	//	slog.Error("failed to init app", slog.Any("error", err))
-	//	return
-	//}
-	//_ = a.Start()
+
+	a, err := app.NewApp()
+	if err != nil {
+		slog.Error("failed to init app", slog.Any("error", err))
+		return
+	}
+	_ = a.Start()
 }
