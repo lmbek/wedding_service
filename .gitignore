@@ -1,6 +1,7 @@
 .idea
 .vs
 .vscode
+.junie
 
 .env
 docker-volumes
