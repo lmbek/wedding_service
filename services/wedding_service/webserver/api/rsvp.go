@@ -18,8 +18,6 @@ type RSVP interface {
 type acceptedStore struct {
 	mu      sync.Mutex
 	invites database.Invites
-	// per code we keep a set of accepted names
-	acc map[string]map[string]struct{}
 }
 
 type AcceptedByCode struct {
@@ -31,7 +29,7 @@ type AcceptedByCode struct {
 }
 
 func NewRSVP(invites database.Invites) RSVP {
-	return &acceptedStore{invites: invites, acc: make(map[string]map[string]struct{})}
+	return &acceptedStore{invites: invites}
 }
 
 func (s *acceptedStore) snapshot(code string) AcceptedByCode {
@@ -39,21 +37,23 @@ func (s *acceptedStore) snapshot(code string) AcceptedByCode {
 	if !ok {
 		return AcceptedByCode{Code: code}
 	}
+	accepted, _ := s.invites.ListAccepted(code)
 	// ensure order stable: iterate members and include only accepted subset
-	st := s.acc[code]
-	accepted := make([]string, 0, len(inv.Members))
+	acceptedSet := make(map[string]struct{}, len(accepted))
+	for _, a := range accepted {
+		acceptedSet[a] = struct{}{}
+	}
+	orderedAccepted := make([]string, 0, len(inv.Members))
 	for _, m := range inv.Members {
-		if st != nil {
-			if _, ok2 := st[m]; ok2 {
-				accepted = append(accepted, m)
-			}
+		if _, ok2 := acceptedSet[m]; ok2 {
+			orderedAccepted = append(orderedAccepted, m)
 		}
 	}
 	return AcceptedByCode{
 		Code:     code,
 		Members:  append([]string(nil), inv.Members...),
-		Accepted: accepted,
-		Count:    len(accepted),
+		Accepted: orderedAccepted,
+		Count:    len(orderedAccepted),
 		Capacity: len(inv.Members),
 	}
 }
@@ -67,19 +67,14 @@ func (s *acceptedStore) List(code string) AcceptedByCode {
 func (s *acceptedStore) Accept(code, name string) AcceptedByCode {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, ok := s.acc[code]; !ok {
-		s.acc[code] = make(map[string]struct{})
-	}
-	s.acc[code][name] = struct{}{}
+	_ = s.invites.Accept(code, name)
 	return s.snapshot(code)
 }
 
 func (s *acceptedStore) Decline(code, name string) AcceptedByCode {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if st, ok := s.acc[code]; ok {
-		delete(st, name)
-	}
+	_ = s.invites.Decline(code, name)
 	return s.snapshot(code)
 }
 

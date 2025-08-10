@@ -138,6 +138,27 @@ footer { margin: 40px 0 20px; text-align: center; color: var(--muted); }
 .invite .inner { margin-top: -10px; padding: 18px; background: var(--surface); border-radius: 0 0 var(--radius) var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.05); }
 .invite[aria-expanded="true"] .cover { transform: rotateX(-100deg); }
 
+/* Tables - invitation */
+.table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+.table th, .table td { padding: 12px 14px; vertical-align: middle; }
+.table thead th { text-align: left; color: var(--muted); font-weight: 700; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.table tbody tr { background: var(--surface); box-shadow: var(--shadow); transition: background-color .15s ease; }
+.table tbody tr:hover { background: color-mix(in srgb, var(--surface) 80%, var(--ring)); }
+.table tbody tr td:first-child { border-radius: 12px 0 0 12px; }
+.table tbody tr td:last-child { border-radius: 0 12px 12px 0; }
+.table tbody td:nth-child(3) { text-align: right; white-space: nowrap; }
+.table .button + .button { margin-left: 8px; }
+.status { display: inline-block; padding: 6px 10px; border-radius: 20px; font-weight: 700; }
+.status.pending { background: #fff5d1; color: #946200; }
+.status.accepted { background: #e8fff1; color: #18794e; }
+.status.declined { background: #ffe9ec; color: #9b1c31; }
+
+@media (max-width: 680px) {
+  .container { width: min(100%, 96%); }
+  .table th:nth-child(3), .table td:nth-child(3) { text-align: right; }
+  .button { padding: 10px 14px; }
+}
+
 .infopage {
     user-select: text;
 }

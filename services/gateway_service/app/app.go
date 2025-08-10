@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"gateway_service/certificate"
@@ -89,7 +90,8 @@ func (a *app) init() error {
 	a.reverseProxy = reverseProxy
 
 	// Konfigurer backends
-	for host, target := range a.config.Backends() {
+	backends := a.config.Backends()
+	for host, target := range backends {
 		link, err := url.Parse(target)
 		if err != nil {
 			return err
@@ -97,6 +99,33 @@ func (a *app) init() error {
 		err = a.reverseProxy.AddHost(host, link)
 		if err != nil {
 			return err
+		}
+		// Optional: also register www.<host> if missing (production-friendly default)
+		if !strings.HasPrefix(host, "www.") {
+			www := "www." + host
+			if _, ok := backends[www]; !ok {
+				_ = a.reverseProxy.AddHost(www, link)
+			}
+		}
+		// Warmup: best-effort reachability check (TCP dial with timeout) for diagnostics
+		hostport := link.Host
+		if link.Scheme == "http" {
+			if !strings.Contains(hostport, ":") {
+				hostport = hostport + ":80"
+			}
+		}
+		if link.Scheme == "https" {
+			if !strings.Contains(hostport, ":") {
+				hostport = hostport + ":443"
+			}
+		}
+		d := net.Dialer{Timeout: 2 * time.Second}
+		conn, dialErr := d.DialContext(a.ctx, "tcp", hostport)
+		if dialErr == nil {
+			_ = conn.Close()
+		} else {
+			// Do not fail startup; just log via logger if available (keeps minimal impact)
+			// This helps explain potential 502 if backend is unreachable inside the network
 		}
 	}
 

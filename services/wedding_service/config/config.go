@@ -60,6 +60,13 @@ func (c *config) KeyPath() string {
 	return c.env.KeyPath()
 }
 
+func (c *config) MySQLHost() string         { return c.env.MySQLHost() }
+func (c *config) MySQLPort() string         { return c.env.MySQLPort() }
+func (c *config) MySQLUser() string         { return c.env.MySQLUser() }
+func (c *config) MySQLPassword() string     { return c.env.MySQLPassword() }
+func (c *config) MySQLDatabase() string     { return c.env.MySQLDatabase() }
+func (c *config) MySQLRootPassword() string { return c.env.MySQLRootPassword() }
+
 func (c *config) Reset() (env.Env, error) {
 	return c.env.Reset()
 }

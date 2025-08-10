@@ -13,6 +13,12 @@ type Env interface {
 	HttpPort() string
 	CertPath() string
 	KeyPath() string
+	MySQLHost() string
+	MySQLPort() string
+	MySQLUser() string
+	MySQLPassword() string
+	MySQLDatabase() string
+	MySQLRootPassword() string
 }
 
 type env struct {
@@ -21,6 +27,12 @@ type env struct {
 	httpPort   string
 	certPath   string
 	keyPath    string
+	mysqlHost  string
+	mysqlPort  string
+	mysqlUser  string
+	mysqlPass  string
+	mysqlDB    string
+	mysqlRoot  string
 }
 
 // NewEnv reads configuration exclusively from the process environment.
@@ -54,6 +66,12 @@ func NewEnv(path string) (Env, error) {
 		httpPort:   httpPort,
 		certPath:   os.Getenv("SELF_SIGNED_CERT_PATH"),
 		keyPath:    os.Getenv("SELF_SIGNED_KEY_PATH"),
+		mysqlHost:  os.Getenv("MYSQL_HOST"),
+		mysqlPort:  os.Getenv("MYSQL_PORT"),
+		mysqlUser:  os.Getenv("MYSQL_USER"),
+		mysqlPass:  os.Getenv("MYSQL_PASSWORD"),
+		mysqlDB:    os.Getenv("MYSQL_DATABASE"),
+		mysqlRoot:  os.Getenv("MYSQL_ROOT_PASSWORD"),
 	}
 	return e, nil
 }
@@ -62,7 +80,13 @@ func (e *env) Reset() (Env, error) {
 	return NewEnv(e.path)
 }
 
-func (e *env) DebugLevel() int  { return e.debugLevel }
-func (e *env) HttpPort() string { return e.httpPort }
-func (e *env) CertPath() string { return e.certPath }
-func (e *env) KeyPath() string  { return e.keyPath }
+func (e *env) DebugLevel() int           { return e.debugLevel }
+func (e *env) HttpPort() string          { return e.httpPort }
+func (e *env) CertPath() string          { return e.certPath }
+func (e *env) KeyPath() string           { return e.keyPath }
+func (e *env) MySQLHost() string         { return e.mysqlHost }
+func (e *env) MySQLPort() string         { return e.mysqlPort }
+func (e *env) MySQLUser() string         { return e.mysqlUser }
+func (e *env) MySQLPassword() string     { return e.mysqlPass }
+func (e *env) MySQLDatabase() string     { return e.mysqlDB }
+func (e *env) MySQLRootPassword() string { return e.mysqlRoot }

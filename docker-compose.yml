@@ -7,7 +7,7 @@ services:
     restart: "no"
     depends_on:
       - wedding_service
-      - tinyserver
+      #- tinyserver
     ports:
       - "80:80"
       - "443:443"
@@ -20,6 +20,34 @@ services:
     networks:
       - wedding-network
 
+  mysql_service:
+    build:
+      context: .
+      dockerfile: services/mysql_service/Dockerfile
+    container_name: mysql_service
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    volumes:
+      - type: bind
+        source: ./.docker/mysql_service/data
+        target: /var/lib/mysql
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-wedding_db}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-password}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u\"$MYSQL_USER\" -p\"$MYSQL_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      - wedding-network
+
   wedding_service:
     container_name: wedding_service
     build:
@@ -27,6 +55,9 @@ services:
       dockerfile: services/wedding_service/Dockerfile
     restart: "no"
     command: ["-frontend", "/app/webserver/website/frontend/out", "-hotreload", "true"]
+    depends_on:
+      mysql_service:
+        condition: service_healthy
     expose:
       - "${WEDDING_SERVICE_HTTP_PORT}"
     volumes:
@@ -41,16 +72,16 @@ services:
     networks:
       - wedding-network
 
-  tinyserver:
-    container_name: tinyserver
-    build:
-      context: .
-      dockerfile: services/tinyserver/Dockerfile
-    restart: "no"
-    expose:
-      - "80"
-    networks:
-      - wedding-network
+#  tinyserver:
+#    container_name: tinyserver
+#    build:
+#      context: .
+#      dockerfile: services/tinyserver/Dockerfile
+#    restart: "no"
+#    expose:
+#      - "80"
+#    networks:
+#      - wedding-network
 
 networks:
   wedding-network:

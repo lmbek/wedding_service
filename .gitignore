@@ -13,7 +13,16 @@ coverage.out
 *.pem
 *.out
 wedding-go-service
+*.pdf
 
 /src/webserver/website/frontend/out/public/api/swagger/docs.go
 /src/webserver/website/frontend/out/public/api/swagger/swagger.json
 /src/webserver/website/frontend/out/public/api/swagger/swagger.yaml
+
+
+# Local docker runtime data and dumps (ignored from Git)
+.docker/
+.docker/mysql_service/dumps/
+
+# Hide MySQL init SQL files (may contain invite codes locally)
+services/mysql_service/initdb/*.sql

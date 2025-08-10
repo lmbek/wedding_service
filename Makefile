@@ -60,10 +60,40 @@ docker-build:
 	docker-compose up --build
 	@echo
 
-run-as-daemon:
+run-as-daemon: ensure-dirs
 	@echo "Starting Docker containers as daemons..."
 	docker-compose up -d
 	@echo
+
+ensure-dirs:
+	@echo "Ensuring local data directories exist..."
+	mkdir -p .docker/mysql_service/data .docker/mysql_service/dumps .docker/wedding_service .docker/gateway_service
+	@echo
+
+# Dump only the schema (no data) to .docker/mysql_service/dumps/schema.sql
+# Requires running mysql_service container. Uses env from .env via included Makefile.
+db-dump-schema: ensure-dirs
+	@echo "Dumping database schema to .docker/mysql_service/dumps/schema.sql"
+	@docker exec mysql_service sh -c "mysqldump -u'$$MYSQL_USER' -p'$$MYSQL_PASSWORD' --no-data '$$MYSQL_DATABASE'" > .docker/mysql_service/dumps/schema.sql || (echo "mysqldump failed. Is mysql_service running?" && exit 1)
+	@echo "Schema dump written to .docker/mysql_service/dumps/schema.sql"
+
+# Dump full database (schema + data) to .docker/mysql_service/dumps/full.sql
+db-dump-all: ensure-dirs
+	@echo "Dumping full database to .docker/mysql_service/dumps/full.sql"
+	@docker exec mysql_service sh -c "mysqldump -u'$$MYSQL_USER' -p'$$MYSQL_PASSWORD' '$$MYSQL_DATABASE'" > .docker/mysql_service/dumps/full.sql || (echo "mysqldump failed. Is mysql_service running?" && exit 1)
+	@echo "Full dump written to .docker/mysql_service/dumps/full.sql"
+
+# Danger: resets the MySQL data directory (removes all DB data) and reruns init scripts on next up
+# Usage: make db-reset-mysql
+# Note: Ensure you have backups. This will stop containers, delete .docker/mysql_service contents, then start again.
+db-reset-mysql:
+	@echo "Stopping containers..."
+	docker-compose down --remove-orphans
+	@echo "Removing MySQL data volume at .docker/mysql_service/data ..."
+	rm -rf .docker/mysql_service/data/*
+	@echo "Starting containers; MySQL will re-initialize and run init scripts..."
+	docker-compose up -d
+	@echo "MySQL reset complete."
 
 run: go-run
 

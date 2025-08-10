@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.24.4 AS builder
+FROM golang:1.24.6 AS builder
 # Build from the wedding_service module directory
 WORKDIR /app/services/wedding_service
 # Copy module files first for caching
@@ -12,7 +12,7 @@ COPY . /app
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags dockerdev -o /out/wedding_service .
 
 # Use Alpine for the runtime image
-FROM alpine:3.20
+FROM alpine:3.22
 WORKDIR /app
 # Install CA certificates for HTTPS outbound requests, if any
 RUN apk add --no-cache ca-certificates && update-ca-certificates

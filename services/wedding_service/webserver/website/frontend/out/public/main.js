@@ -113,7 +113,6 @@
     const ctx = qs('#inviteCtx');
     const form = qs('#inviteCodeForm');
     const input = qs('#inviteCodeInput');
-    const pdfFrame = qs('#invitationPdf');
     const closeBtn = qs('#closeInvite');
     const counterEl = qs('#acceptedCounter');
     const myTable = qs('#myInvitationTable');
@@ -124,12 +123,10 @@
 
     const code = ctx ? (ctx.getAttribute('data-code') || '') : '';
     const valid = ctx ? (ctx.getAttribute('data-valid') === 'true') : false;
-    const pdf = ctx ? (ctx.getAttribute('data-pdf') || '') : '';
 
     // When valid invitation page, store current invite code
     if (valid && code) {
       try { localStorage.setItem('invite:current', code); } catch(e){}
-      if (pdfFrame && pdf) pdfFrame.src = pdf;
     }
 
     if (closeBtn){
@@ -140,7 +137,7 @@
           Object.keys(localStorage).forEach(k=>{ if (k.startsWith('inviteStatus:')) localStorage.removeItem(k); });
           localStorage.removeItem('invite:current');
         } catch(e){}
-        window.location.href = '/invitation/';
+        window.location.href = '/bryllup/invitation/';
       });
     }
 
@@ -149,7 +146,7 @@
         e.preventDefault();
         const c = (input && input.value || '').trim();
         if (!c) { alert('Indtast venligst din invitationskode.'); return; }
-        window.location.href = '/invitation/' + encodeURIComponent(c) + '/';
+        window.location.href = '/bryllup/invitation/' + encodeURIComponent(c) + '/';
       });
     }
 
@@ -175,9 +172,14 @@
         const declinedKey = `inviteDeclined:${code}:${name}`;
         const isAccepted = acceptedSet.has(name);
         const isDeclined = !isAccepted && localStorage.getItem(declinedKey) === '1';
-        // status text
-        tdStatus.textContent = isAccepted ? 'deltager' : 'deltager ikke';
-        // color only when a selection has been made
+        // status pill
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'status';
+        if (isAccepted) { statusSpan.classList.add('accepted'); statusSpan.textContent = 'Deltager'; }
+        else if (isDeclined) { statusSpan.classList.add('declined'); statusSpan.textContent = 'Deltager ikke'; }
+        else { statusSpan.classList.add('pending'); statusSpan.textContent = 'Afventer'; }
+        tdStatus.appendChild(statusSpan);
+        // button styles
         if (isAccepted) { accBtn.classList.add('primary'); decBtn.classList.remove('danger'); }
         else if (isDeclined) { decBtn.classList.add('danger'); accBtn.classList.remove('primary'); }
         // disable per rules
@@ -186,12 +188,12 @@
         accBtn.title = isLocked ? 'Accepter er låst 7 dage før' : '';
         accBtn.addEventListener('click', async ()=>{
           try { localStorage.removeItem(declinedKey); } catch(e){}
-          await postJSON(`/api/invites/${encodeURIComponent(code)}/accept/`, {name});
+          await postJSON(`/bryllup/api/invites/${encodeURIComponent(code)}/accept/`, {name});
           await refreshAllAccepted();
         });
         decBtn.addEventListener('click', async ()=>{
           try { localStorage.setItem(declinedKey, '1'); } catch(e){}
-          await postJSON(`/api/invites/${encodeURIComponent(code)}/decline/`, {name});
+          await postJSON(`/bryllup/api/invites/${encodeURIComponent(code)}/decline/`, {name});
           await refreshAllAccepted();
         });
         tdAct.appendChild(accBtn); tdAct.appendChild(decBtn);
@@ -215,7 +217,7 @@
 
     async function refreshAccepted(){
       try {
-        const res = await fetch(`/api/invites/${encodeURIComponent(code)}/accepted/`);
+        const res = await fetch(`/bryllup/api/invites/${encodeURIComponent(code)}/accepted/`);
         const data = await res.json();
         if (counterEl) counterEl.textContent = data.count + '/' + data.capacity;
         renderMyTable(data);
@@ -224,7 +226,7 @@
 
     async function refreshAllAccepted(){
       try {
-        const res = await fetch('/api/invites/accepted/');
+        const res = await fetch('/bryllup/api/invites/accepted/');
         const data = await res.json();
         renderAllTable(data.accepted||[]);
       } catch(e) { /* ignore */ }
@@ -252,8 +254,8 @@
     if (!a && !btn) return;
     const start = new Date('2025-09-20T13:00:00');
     const end = new Date('2025-09-20T23:59:00');
-    const text = 'Bryllup – Lars & Partner';
-    const details = 'Vi fejrer kærligheden! Se praktisk info på /info/';
+    const text = 'Bryllup – Lars & Ida';
+    const details = 'Vi fejrer kærligheden! Se praktisk info på /bryllup/info/';
     const location = 'Farre Kirke & Fælleshuset';
 
     if (a){

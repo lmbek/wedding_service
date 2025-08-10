@@ -8,6 +8,7 @@ type Invites interface {
 	Accept(code, name string) error
 	Decline(code, name string) error
 	EnsureSchema() error
+	TrackVisit(code, ip, userAgent, referer, path string) error
 }
 
 // Invite holds read-only data for rendering an invitation page.
@@ -15,7 +16,6 @@ type Invites interface {
 type Invite struct {
 	Code    string
 	Name    string
-	PDF     string
 	Members []string
 }
 
@@ -24,16 +24,10 @@ type invites struct {
 	accepted map[string]map[string]struct{}
 }
 
-// NewInvites returns an in-memory implementation with a few demo codes.
+// NewInvites returns an empty in-memory implementation (no hardcoded demo data).
+// This is used only as a fallback when no database is available.
 func NewInvites() Invites {
-	data := map[string]Invite{
-		// Demo/test codes. You kan replace/add as needed.
-		"jensen":     {Code: "jensen", Name: "Familien Jensen", Members: []string{"Rita", "Hans"}},
-		"bek":        {Code: "bek", Name: "Familien Bek", Members: []string{"Johnny", "Cecilie"}},
-		"hfj934e":    {Code: "hfj934e", Name: "Familien test3", Members: []string{"Peter"}},
-		"child0001":  {Code: "child0001", Name: "Sofie (barn)", Members: []string{"Sofie (barn)"}},
-		"guest-demo": {Code: "guest-demo", Name: "Gæst", Members: []string{"Gæst"}},
-	}
+	data := map[string]Invite{}
 	return &invites{m: data, accepted: make(map[string]map[string]struct{})}
 }
 
@@ -79,3 +73,8 @@ func (i *invites) Decline(code, name string) error {
 }
 
 func (i *invites) EnsureSchema() error { return nil }
+
+func (i *invites) TrackVisit(code, ip, userAgent, referer, path string) error {
+	// no-op in-memory auditor
+	return nil
+}
