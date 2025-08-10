@@ -1,36 +1,52 @@
+{{define "Title"}}Reception{{end}}
+
 <section class="hero reveal" data-in="true">
-  <div class="container">
-    <div class="badge">Reception</div>
-    <h1>Velkommen til receptionen</h1>
-    <p class="sub">Denne side er kun for jer, vi glæder os til at se jer!</p>
-  </div>
+    <div class="container">
+        <div class="badge">Reception</div>
+        <h1>{{.Title}}</h1>
+        <p class="sub">Denne side er til jer, der er inviteret til reception via facebook, vi glæder os til at se
+            jer!</p>
+    </div>
 </section>
 
 <section class="reveal infopage">
-  <div class="container" style="max-width:900px">
-    <div class="card" style="padding:18px">
-      <h3 style="margin-top:0">Praktisk info for receptionen</h3>
-      <div class="grid" style="grid-template-columns: repeat(12, minmax(0,1fr)); gap:10px">
-        <div class="info" style="grid-column: span 6;">
-          <h4>Tid & Sted</h4>
-          <dl style="display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin:0">
-            <dt style="font-weight:700">Tid</dt><dd>ca. 14:00 (efter vielsen)</dd>
-            <dt style="font-weight:700">Sted</dt><dd>Udenfor Farre Kirke</dd>
-          </dl>
+    <div class="container" style="max-width:900px">
+        <div class="card" style="padding:18px">
+            <h3 style="margin-top:0">Praktisk info for receptionen</h3>
+            <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px">
+                <div class="info">
+                    <h4>Tid & Sted</h4>
+                    <dl style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin:0">
+                        <dt style="font-weight:700">Vielse</dt>
+                        <dd>kl. 13:00 <br>Farre Kirke<br>Farre Kirkevej 4<br>7323 Give</dd>
+                        <dt style="font-weight:700">Reception</dt>
+                        <dd>ca. kl. 14:00 (efter vielsen)<br>Fælleshuset<br>Irene Løvbjergs Vej 4<br>7323 Give</dd>
+                    </dl>
+                </div>
+                <div class="info">
+                    <h4>Det praktiske</h4>
+                    <p style="margin:0">Der vil være kage og kaffe. Tøj: pænt, afslappet. Gaver er ikke
+                        nødvendige, men varmer altid :-)</p>
+                </div>
+            </div>
         </div>
-        <div class="info" style="grid-column: span 6;">
-          <h4>Det praktiske</h4>
-          <p style="margin:0">Der vil være kage, kaffe og bobler. Tøj: pænt, afslappet. Gaver er ikke nødvendige.</p>
-        </div>
-      </div>
-    </div>
 
-    <div class="card" style="padding:18px;margin-top:14px">
-      <h3 style="margin-top:0">Adresser & Kort</h3>
-      <div style="margin-top:12px">
-        <h4>Farre Kirke</h4>
-        <iframe title="Farre Kirke" src="https://www.google.com/maps?q=Farre%20Kirke&output=embed" width="100%" height="260" style="border:0;border-radius:12px;box-shadow:var(--shadow)" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
+        <div class="card" style="padding:18px;margin-top:14px">
+            <h3 style="margin-top:0">Adresser & Kort</h3>
+            <div style="margin-top:12px">
+                <h4>Farre Kirke</h4>
+                <iframe title="Farre Kirke" src="https://www.google.com/maps?q=Farre%20Kirke&output=embed" width="100%"
+                        height="260" style="border:0;border-radius:12px;box-shadow:var(--shadow)" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <div style="margin-top:12px">
+                <h4>Fælleshuset</h4>
+                <iframe title="Fælleshuset"
+                        src="https://www.google.com/maps?q=Irene%20Løvbjergs%20Vej%204%207323%20Give&output=embed"
+                        width="100%"
+                        height="260" style="border:0;border-radius:12px;box-shadow:var(--shadow)" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
     </div>
-  </div>
 </section>

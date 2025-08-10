@@ -207,12 +207,18 @@
       const tbody = allTable.querySelector('tbody');
       if (!tbody) return;
       tbody.innerHTML = '';
-      (list||[]).forEach(name => {
+      const arr = Array.isArray(list) ? list : [];
+      arr.forEach(name => {
         const tr = document.createElement('tr');
         const tdName = document.createElement('td'); tdName.textContent = name;
         tr.appendChild(tdName);
         tbody.appendChild(tr);
       });
+      const title = document.getElementById('allAcceptedTitle');
+      if (title){
+        const n = arr.length || tbody.querySelectorAll('tr').length;
+        title.textContent = `Deltagerlisten (${n} har klikket deltager)`;
+      }
     }
 
     async function refreshAccepted(){
@@ -297,6 +303,53 @@
     }
   }
 
+  function setupConsentPopup(){
+    try {
+      if (localStorage.getItem('consent:activity') === '1') return; // already accepted
+    } catch(e) { /* ignore storage errors */ }
+
+    const box = document.createElement('div');
+    box.className = 'cookie-popup';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-live', 'polite');
+    box.innerHTML = [
+      '<p>Vi bruger ikke cookies, men aktivitet på siden bliver logget. Vil du acceptere det?</p>',
+      '<div class="actions">',
+      '  <button type="button" class="button primary" id="consentAccept">Accepter</button>',
+      '  <button type="button" class="button secondary" id="consentReject">Afvis</button>',
+      '</div>',
+      '<div class="small" id="consentMsg" style="display:none;margin-top:6px;"></div>'
+    ].join('');
+
+    document.body.appendChild(box);
+    requestAnimationFrame(()=>{ box.setAttribute('data-show','true'); });
+
+    const acceptBtn = box.querySelector('#consentAccept');
+    const rejectBtn = box.querySelector('#consentReject');
+    const msg = box.querySelector('#consentMsg');
+
+    function hide(){ box.removeAttribute('data-show'); setTimeout(()=>box.remove(), 250); }
+
+    if (acceptBtn){
+      acceptBtn.addEventListener('click', ()=>{
+        try { localStorage.setItem('consent:activity','1'); } catch(e) {}
+        hide();
+      });
+    }
+    if (rejectBtn){
+      rejectBtn.addEventListener('click', ()=>{
+        if (msg){
+          msg.textContent = 'Jamen så lad da være med at bruge siden!';
+          msg.style.display = 'block';
+        }
+        // Disable buttons after reject message
+        if (acceptBtn) acceptBtn.disabled = true;
+        rejectBtn.disabled = true;
+        setTimeout(()=>{ hide(); }, 5000);
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     setYear();
     smoothAnchors();
@@ -307,5 +360,6 @@
     inviteCard();
     setupInvitationPage();
     setupCalendarPage();
+    setupConsentPopup();
   });
 })();

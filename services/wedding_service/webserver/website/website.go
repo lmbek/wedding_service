@@ -39,7 +39,7 @@ func (render *Render) InvitationPageHandler(w http.ResponseWriter, r *http.Reque
 	_ = render.invites.TrackVisit(code, ip, ua, ref, path)
 	data := invitationData{
 		Name:            name,
-		Information:     "Din plads er reserveret til ceremonien i Farre Kirke kl. 13:00 og fest i fælleshuset efterfølgende. Kontakt os med sms eller opkald, hvis du har allergier på +45 26 23 25 55.",
+		Information:     "Din plads er reserveret til ceremonien i Farre Kirke kl. 13:00 og fest i fælleshuset efterfølgende. \nKontakt os med sms eller opkald, hvis du har allergier på +45 26 23 25 55.",
 		AcceptedInvites: accepted,
 		InviteValid:     valid,
 		InviteCode:      code,

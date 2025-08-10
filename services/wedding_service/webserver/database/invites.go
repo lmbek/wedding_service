@@ -5,6 +5,8 @@ package database
 type Invites interface {
 	FindByCode(code string) (Invite, bool)
 	ListAccepted(code string) ([]string, error)
+	// ListAllAccepted returns all member names that have accepted across all invites.
+	ListAllAccepted() ([]string, error)
 	Accept(code, name string) error
 	Decline(code, name string) error
 	EnsureSchema() error
@@ -20,15 +22,14 @@ type Invite struct {
 }
 
 type invites struct {
-	m        map[string]Invite
-	accepted map[string]map[string]struct{}
+	m map[string]Invite
 }
 
 // NewInvites returns an empty in-memory implementation (no hardcoded demo data).
 // This is used only as a fallback when no database is available.
 func NewInvites() Invites {
 	data := map[string]Invite{}
-	return &invites{m: data, accepted: make(map[string]map[string]struct{})}
+	return &invites{m: data}
 }
 
 func (i *invites) FindByCode(code string) (Invite, bool) {
@@ -40,36 +41,23 @@ func (i *invites) FindByCode(code string) (Invite, bool) {
 }
 
 func (i *invites) ListAccepted(code string) ([]string, error) {
-	st := i.accepted[code]
-	if st == nil {
-		return []string{}, nil
-	}
-	acc := make([]string, 0, len(st))
-	for name := range st {
-		acc = append(acc, name)
-	}
-	return acc, nil
+	// In-memory fallback keeps no RSVP state to avoid non-persistent storage.
+	return []string{}, nil
 }
 
 func (i *invites) Accept(code, name string) error {
-	if code == "" || name == "" {
-		return nil
-	}
-	if _, ok := i.accepted[code]; !ok {
-		i.accepted[code] = make(map[string]struct{})
-	}
-	i.accepted[code][name] = struct{}{}
+	// No in-memory mutation. Persist only supported by DB-backed implementation.
 	return nil
 }
 
 func (i *invites) Decline(code, name string) error {
-	if code == "" || name == "" {
-		return nil
-	}
-	if st, ok := i.accepted[code]; ok {
-		delete(st, name)
-	}
+	// No in-memory mutation. Persist only supported by DB-backed implementation.
 	return nil
+}
+
+func (i *invites) ListAllAccepted() ([]string, error) {
+	// In-memory fallback keeps no RSVP state.
+	return []string{}, nil
 }
 
 func (i *invites) EnsureSchema() error { return nil }

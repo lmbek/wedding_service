@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"sync"
+	"wedding_service/webserver/database"
 )
 
 // AcceptApp is an interface-first in-memory RSVP accept service.
@@ -14,15 +14,19 @@ type AcceptApp interface {
 	List() AcceptedResponse
 }
 
-type acceptApp struct {
-	mu       sync.Mutex
-	set      map[string]struct{}
-	order    []string
+type acceptApp interface {
+	Accept(name string) (AcceptedResponse, error)
+	Decline(name string) (AcceptedResponse, error)
+	List() AcceptedResponse
+}
+
+type dbAcceptApp struct {
+	invites  database.Invites
 	capacity int
 }
 
-func NewAcceptApp() AcceptApp {
-	return &acceptApp{set: make(map[string]struct{}), capacity: 45}
+func NewAcceptApp(invites database.Invites) AcceptApp {
+	return &dbAcceptApp{invites: invites, capacity: 45}
 }
 
 type AcceptedResponse struct {
@@ -31,52 +35,32 @@ type AcceptedResponse struct {
 	Capacity int      `json:"capacity"`
 }
 
-func (a *acceptApp) snapshot() AcceptedResponse {
-	out := make([]string, len(a.order))
-	copy(out, a.order)
+func (a *dbAcceptApp) snapshot() AcceptedResponse {
+	list, _ := a.invites.ListAllAccepted()
+	out := make([]string, len(list))
+	copy(out, list)
 	return AcceptedResponse{Accepted: out, Count: len(out), Capacity: a.capacity}
 }
 
-func (a *acceptApp) Accept(name string) (AcceptedResponse, error) {
-	if name == "" {
-		name = "Gæst"
-	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if _, ok := a.set[name]; !ok {
-		a.set[name] = struct{}{}
-		a.order = append(a.order, name)
-	}
+func (a *dbAcceptApp) Accept(name string) (AcceptedResponse, error) {
+	// Global accept endpoint is read-only; per-invite accept persists via DB in RSVP handlers.
 	return a.snapshot(), nil
 }
 
-func (a *acceptApp) Decline(name string) (AcceptedResponse, error) {
-	if name == "" {
-		name = "Gæst"
-	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if _, ok := a.set[name]; ok {
-		delete(a.set, name)
-		// remove from order slice
-		for i, n := range a.order {
-			if n == name {
-				a.order = append(a.order[:i], a.order[i+1:]...)
-				break
-			}
-		}
-	}
+func (a *dbAcceptApp) Decline(name string) (AcceptedResponse, error) {
+	// Global decline endpoint is read-only; per-invite decline persists via DB in RSVP handlers.
 	return a.snapshot(), nil
 }
 
-func (a *acceptApp) List() AcceptedResponse {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+func (a *dbAcceptApp) List() AcceptedResponse {
 	return a.snapshot()
 }
 
 // Singleton instance (interface type) kept inside package scope.
-var acceptor AcceptApp = NewAcceptApp()
+var acceptor AcceptApp
+
+// SetAccept wires the global AcceptApp implementation (DI from mux).
+func SetAccept(a AcceptApp) { acceptor = a }
 
 // HTTP handlers (thin layer) using the interface above.
 
@@ -85,7 +69,10 @@ type acceptPayload struct {
 }
 
 func GetAcceptedHandler(w http.ResponseWriter, r *http.Request) {
-	resp := acceptor.List()
+	var resp AcceptedResponse
+	if acceptor != nil {
+		resp = acceptor.List()
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
 }
@@ -93,7 +80,10 @@ func GetAcceptedHandler(w http.ResponseWriter, r *http.Request) {
 func PostAcceptHandler(w http.ResponseWriter, r *http.Request) {
 	var p acceptPayload
 	_ = json.NewDecoder(r.Body).Decode(&p)
-	resp, _ := acceptor.Accept(p.Name)
+	var resp AcceptedResponse
+	if acceptor != nil {
+		resp, _ = acceptor.Accept(p.Name)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
 }
@@ -101,7 +91,10 @@ func PostAcceptHandler(w http.ResponseWriter, r *http.Request) {
 func PostDeclineHandler(w http.ResponseWriter, r *http.Request) {
 	var p acceptPayload
 	_ = json.NewDecoder(r.Body).Decode(&p)
-	resp, _ := acceptor.Decline(p.Name)
+	var resp AcceptedResponse
+	if acceptor != nil {
+		resp, _ = acceptor.Decline(p.Name)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
 }

@@ -9,6 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// normalizeSpace trims and collapses internal whitespace to a single space
+// to make invitation code and names matching robust against stray spaces.
+func normalizeSpace(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return s
+	}
+	return strings.Join(strings.Fields(s), " ")
+}
+
 // mysqlInvites is an unexported GORM-backed implementation of Invites.
 type mysqlInvites struct {
 	db *gorm.DB
@@ -17,9 +27,9 @@ type mysqlInvites struct {
 // GORM models (unexported)
 type invitedModel struct {
 	ID         uint64 `gorm:"column:id;primaryKey;autoIncrement"`
-	Code       string `gorm:"column:code;size:64;not null;uniqueIndex:invited_code_member_idx"`
+	Code       string `gorm:"column:code;size:64;not null"`
 	InviteName string `gorm:"column:invite_name;size:255;not null"`
-	MemberName string `gorm:"column:member_name;size:255;not null;uniqueIndex:invited_code_member_idx"`
+	MemberName string `gorm:"column:member_name;size:255;not null"`
 	Accepted   *bool  `gorm:"column:accepted"`
 }
 
@@ -102,7 +112,6 @@ func NewInvitesMySQL(dsn string) (Invites, error) {
 }
 
 func (m *mysqlInvites) EnsureSchema() error {
-	// Create/update tables (no pdf column anywhere)
 	err := m.db.AutoMigrate(&invitedModel{}, &invitedEventModel{}, &inviteVisitModel{})
 	if err != nil {
 		return err
@@ -112,14 +121,11 @@ func (m *mysqlInvites) EnsureSchema() error {
 }
 
 func (m *mysqlInvites) FindByCode(code string) (Invite, bool) {
+	code = normalizeSpace(code)
 	if code == "" {
 		return Invite{}, false
 	}
-	// Normalize input: trim whitespace to avoid mismatch from pasted values
-	code = strings.TrimSpace(code)
 	var rows []invitedModel
-	// Use TRIM on both sides to be robust against stray spaces in DB or input.
-	// Collation is already set at table level to utf8mb4_danish_ci in init scripts, so case/locale is handled.
 	err := m.db.Where("TRIM(code) = TRIM(?)", code).Order("member_name asc").Find(&rows).Error
 	if err != nil {
 		return Invite{}, false
@@ -129,8 +135,13 @@ func (m *mysqlInvites) FindByCode(code string) (Invite, bool) {
 	}
 	inv := Invite{Code: code}
 	inv.Name = rows[0].InviteName
+	seen := make(map[string]struct{}, len(rows))
 	members := make([]string, 0, len(rows))
 	for _, r := range rows {
+		if _, ok := seen[r.MemberName]; ok {
+			continue
+		}
+		seen[r.MemberName] = struct{}{}
 		members = append(members, r.MemberName)
 	}
 	inv.Members = members
@@ -138,26 +149,51 @@ func (m *mysqlInvites) FindByCode(code string) (Invite, bool) {
 }
 
 func (m *mysqlInvites) ListAccepted(code string) ([]string, error) {
-	code = strings.TrimSpace(code)
+	code = normalizeSpace(code)
 	var rows []invitedModel
 	err := m.db.Where("TRIM(code) = TRIM(?) AND accepted = ?", code, true).Find(&rows).Error
 	if err != nil {
 		return nil, err
 	}
+	seen := make(map[string]struct{}, len(rows))
 	out := make([]string, 0, len(rows))
 	for _, r := range rows {
+		if _, ok := seen[r.MemberName]; ok {
+			continue
+		}
+		seen[r.MemberName] = struct{}{}
+		out = append(out, r.MemberName)
+	}
+	return out, nil
+}
+
+func (m *mysqlInvites) ListAllAccepted() ([]string, error) {
+	var rows []invitedModel
+	err := m.db.Where("accepted = ?", true).Order("member_name asc").Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{}, len(rows))
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		if _, ok := seen[r.MemberName]; ok {
+			continue
+		}
+		seen[r.MemberName] = struct{}{}
 		out = append(out, r.MemberName)
 	}
 	return out, nil
 }
 
 func (m *mysqlInvites) Accept(code, name string) error {
+	code = normalizeSpace(code)
+	name = normalizeSpace(name)
 	if code == "" || name == "" {
 		return errors.New("code and name required")
 	}
 	// Find existing row (must exist); do NOT insert new rows
 	var rec invitedModel
-	err := m.db.Where("code = ? AND member_name = ?", code, name).Take(&rec).Error
+	err := m.db.Where("TRIM(code) = TRIM(?) AND TRIM(member_name) = TRIM(?)", code, name).Take(&rec).Error
 	if err != nil {
 		return err
 	}
@@ -172,12 +208,14 @@ func (m *mysqlInvites) Accept(code, name string) error {
 }
 
 func (m *mysqlInvites) Decline(code, name string) error {
+	code = normalizeSpace(code)
+	name = normalizeSpace(name)
 	if code == "" || name == "" {
 		return errors.New("code and name required")
 	}
 	// Only update existing row; do not insert placeholders
 	var rec invitedModel
-	err := m.db.Where("code = ? AND member_name = ?", code, name).Take(&rec).Error
+	err := m.db.Where("TRIM(code) = TRIM(?) AND TRIM(member_name) = TRIM(?)", code, name).Take(&rec).Error
 	if err != nil {
 		return err
 	}
@@ -191,6 +229,7 @@ func (m *mysqlInvites) Decline(code, name string) error {
 }
 
 func (m *mysqlInvites) TrackVisit(code, ip, userAgent, referer, path string) error {
+	code = normalizeSpace(code)
 	if code == "" {
 		return errors.New("code required")
 	}

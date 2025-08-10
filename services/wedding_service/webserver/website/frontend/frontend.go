@@ -24,9 +24,13 @@ var publicEmbeddedFS embed.FS
 var privateEmbeddedFS embed.FS
 
 type Frontend interface {
+	// load initializes the frontend using either embedded or file-based assets
 	load(frontendPath string) (Frontend, error)
+	// Serve handles HTTP requests for frontend assets
 	Serve(w http.ResponseWriter, r *http.Request)
+	// PublicFS returns the filesystem containing public assets
 	PublicFS() fs.FS
+	// PrivateFS returns the filesystem containing private assets
 	PrivateFS() fs.FS
 }
 

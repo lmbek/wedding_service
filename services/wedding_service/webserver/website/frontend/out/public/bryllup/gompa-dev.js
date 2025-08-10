@@ -5,7 +5,7 @@
 if (!window.socket) {
     const wsProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const wsHost = window.location.host; // includes hostname:port
-    const wsPath = '/websocket/hotreload/'; // server expects trailing slash
+    const wsPath = '/bryllup/websocket/hotreload/'; // server expects trailing slash
     window.socket = new WebSocket(`${wsProto}://${wsHost}${wsPath}`);
 
     window.socket.onmessage = function(event) {
