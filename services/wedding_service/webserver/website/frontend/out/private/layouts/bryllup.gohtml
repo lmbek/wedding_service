@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "Title" .}}Lars & Ida's bryllup{{end}}</title>
+  <meta name="description" content="Du er inviteret til at fejre vores kærlighed. Kom og vær med til en dag fyldt med glæde, musik og minder.">
+    <!--<link rel="icon" href="data:;base64,=">-->
+    <link rel="icon" href="/bryllup/images/logo.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="/bryllup/default.css" rel="stylesheet">
+  <script defer src="/bryllup/main.js"></script>
+  <script defer src="/bryllup/gompa-dev.js"></script>
+</head>
+<body>
+  <noscript>Warning: JavaScript is not enabled</noscript>
+  {{template "components/nav.gohtml" .}}
+  <main class="container">
+    <h1 class="sr-only">Welcome {{.Name}}</h1>
+    {{template "page" .}}
+  </main>
+  <footer>
+    Junie AI Agent i samarbejde med Lars M Bek © <span id="year"></span>
+      <br><br>
+  </footer>
+</body>
+</html>

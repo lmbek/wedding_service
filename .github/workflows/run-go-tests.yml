@@ -1,74 +1,71 @@
 name: Go Test Automation
 
 on:
-    pull_request:
-        branches: [development]
-    push:
-        branches: [development, test-staging, latest-release]
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development, test-staging, latest-release]
 
 jobs:
-    test:
-        name: Run Go Tests
-        runs-on: ubuntu-latest
+  test:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: '1.24.2'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.4'
+          cache: false
 
-            - name: Download dependencies
-              run: go mod tidy
+      - name: Create minimal .env
+        run: |
+          echo "SERVICE_NAME=wedding_service" > .env
+          echo "GOOS=linux" >> .env
 
-            - name: Copy .env.example to .env
-              run: cp .env.example .env
+      - name: Install swag CLI
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.4 # don't upgrade to 1.16.5, super unstable
 
-            # append GOOS=linux to .env to tell GitHub to use linux
-            - name: Set environment variable GOOS=linux in .env
-              run: echo -e "\nGOOS=linux" >> .env
+      - name: Run go generate using Makefile
+        run: make go-generate
 
-            - name: Run go generate using Makefile # we need to generate localhost certificates
-              run: make go-generate
+      - name: Run tests using Makefile
+        run: make test
 
-            - name: Run tests using Makefile
-              run: make test
+      - name: Run tests with coverage
+        run: make test-coverage
 
-            - name: Run tests with coverage
-              run: make test-coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
 
-            -   name: Upload coverage report
-                uses: actions/upload-artifact@v4
-                with:
-                    name: coverage-report
-                    path: coverage.out
+      - name: Run benchmarks
+        run: make bench
 
-            -   name: Run benchmarks
-                run: make bench
+  build:
+    name: Run Go Build
+    runs-on: ubuntu-latest
+    needs: test
 
-    build:
-        name: Run Go Build
-        runs-on: ubuntu-latest
-        needs: test  # Waits for tests to pass
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache: false
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: '1.24.2'
+      - name: Create minimal .env
+        run: |
+          echo "APP_NAME=wedding_service" > .env
+          echo "GOOS=linux" >> .env
 
-            - name: Build application using Makefile
-              run: make go-build-for-github
-
-#      - name: Run application
-#        run: |
-#          echo "Starting the app..."
-#          ./app &
-#          sleep 3
-#          echo "App started"
-#          kill $!
+      - name: Build application using Makefile
+        run: make go-build-for-github

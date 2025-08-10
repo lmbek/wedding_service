@@ -1,0 +1,103 @@
+{{define "Title"}}Invitation{{end}}
+
+<section class="hero reveal" data-in="true">
+  <div class="container">
+    <div id="inviteCtx" data-code="{{.InviteCode}}" data-valid="{{.InviteValid}}"></div>
+    <div class="badge">Invitation</div>
+
+    {{if not .InviteValid}}
+      {{if .InviteCode}}
+        <p class="sub" style="color:#9b1c31;font-weight:700">Koden findes ikke</p>
+      {{else}}
+        <p class="sub">Skriv din invitationskode eller spørg os om den</p>
+      {{end}}
+      <form id="inviteCodeForm" class="form" style="max-width:560px;margin:10px auto 0;display:grid;grid-template-columns:1fr auto;gap:10px" novalidate>
+        <input id="inviteCodeInput" class="input" placeholder="Indtast din invitations-kode" value="{{.InviteCode}}" />
+        <button class="button primary" type="submit">Åbn</button>
+      </form>
+    {{else}}
+        <h1 style="font-size: 2rem;">Kære {{.Name}} – Du/I er inviteret!</h1>
+      <div id="inviteInfo" class="card" style="max-width:980px;margin:16px auto;">
+        <h3>Jeres invitation</h3>
+        <p>{{.Information}}</p>
+        <h4>Jeres invitation <small style="color:var(--muted)"><span id="acceptedCounter">0/0</span></small></h4>
+        <div style="overflow-x:auto;margin-bottom:10px;">
+          <table id="myInvitationTable" class="table">
+            <thead>
+              <tr style="text-align:left;color:var(--muted)">
+                <th style="width:50%">Navn</th>
+                <th style="width:25%">Status</th>
+                <th style="width:25%">Handling</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h4 id="allAcceptedTitle">Deltagerlisten</h4>
+        <div style="overflow-x:auto">
+          <table id="allAcceptedTable" class="table">
+            <thead>
+              <tr style="text-align:left;color:var(--muted)">
+                <th>Navn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .AcceptedInvites}}
+              <tr>
+                <td>{{.}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin:16px auto;width:100%">
+        <h3 style="margin-top:0">Invitation PDF</h3>
+        <iframe id="invitationPdf" title="Invitation PDF" src="/bryllup/invitation/qmkjfferd309ji9f3/pdf/invitation.pdf" width="100%" height="700" style="border:0;border-radius:12px;box-shadow:var(--shadow)"></iframe>
+          <p>OBS: PDF er forkert vedr. bryllupsfest tidspunkt, læs tidsplan nederst</p>
+          <div class="cta" style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <button id="closeInvite" class="button" type="button">Luk invitation</button>
+        </div>
+      </div>
+        <div class="card" style="margin:16px auto;width:100%">
+            <h3 style="margin-top:0">Tidsplan (opdateres senere)</h3>
+
+            <h4>Lørdag</h4>
+            <table class="table">
+                <tbody>
+                <tr>
+                    <td>13:00–13:40</td>
+                    <td>Vielse i kirken</td>
+                </tr>
+                <tr>
+                    <td>13:45–14:00</td>
+                    <td>Transport til feststed</td>
+                </tr>
+                <tr>
+                    <td>14:00–15:00</td>
+                    <td>Reception</td>
+                </tr>
+                <tr>
+                    <td>15:00–18:30</td>
+                    <td>Bryllupsmiddag</td>
+                </tr>
+                <tr>
+                    <td>18:30–21:30</td>
+                    <td>Dessert, kage, brudevals, dans</td>
+                </tr>
+                <tr>
+                    <td>21:30–21:45</td>
+                    <td>Afslutning</td>
+                </tr>
+                <tr>
+                    <td>21:45–23:00</td>
+                    <td>Fælles oprydning</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+    {{end}}
+  </div>
+</section>

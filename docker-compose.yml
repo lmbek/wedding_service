@@ -1,55 +1,88 @@
 services:
-    wedding-go-service: # go service
-        container_name: wedding-go-service
-        image: alpine:3.21.3
-        restart: no
-        depends_on: # wait for mysql to start before this container
-            - wedding-mysql-service
-        volumes:
-            - ./docker-volumes/main-service-files:/app
-        ports:
-            - "${WEDDING_SERVICE_HTTP_PORT}:${WEDDING_SERVICE_HTTP_PORT}"
-            - "${WEDDING_SERVICE_HTTPS_PORT}:${WEDDING_SERVICE_HTTPS_PORT}"
-        #env_file:
-        #    - .env
-        environment:
-            - GOOS=linux
-            - GOARCH=amd64
-            - MODE=docker-dev
-        working_dir: /app
-        command: ./${APP_NAME}
-        networks:
-            - wedding-network
+  gateway_service:
+    container_name: gateway_service
+    build:
+      context: .
+      dockerfile: services/gateway_service/Dockerfile
+    restart: "no"
+    depends_on:
+      - wedding_service
+      #- tinyserver
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ./.docker/gateway_service
+        target: /data
+    env_file:
+      - .env
+    networks:
+      - wedding-network
 
-    wedding-mysql-service: # mysql
-        container_name:  wedding-mysql-service
-        image: mysql:8.4.5
-        restart: no
-        volumes:
-            - ./docker-volumes/mysql-data:/var/lib/mysql
-        env_file:
-            - .env
-        environment:
-            - "MYSQL_ROOT_PASSWORD=${MYSQL_SERVICE_ROOT_PASSWORD}"
-        ports:
-            - "${MYSQL_SERVICE_HTTP_PORT}:${MYSQL_SERVICE_HTTP_PORT}"
-        networks:
-            - wedding-network
-    wedding-prometheus:
-        container_name: wedding-prometheus
-        image: prom/prometheus:latest
-        restart: no
-        ports:
-            - "9090:9090"
-        networks:
-            - wedding-network
-    wedding-grafana:
-        container_name: wedding-grafana
-        image: grafana/grafana:latest
-        restart: no
-        ports:
-            - "3000:3000"
-        networks:
-            - wedding-network
+  mysql_service:
+    build:
+      context: .
+      dockerfile: services/mysql_service/Dockerfile
+    container_name: mysql_service
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    volumes:
+      - type: bind
+        source: ./.docker/mysql_service/data
+        target: /var/lib/mysql
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-wedding_db}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-password}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u\"$MYSQL_USER\" -p\"$MYSQL_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      - wedding-network
+
+  wedding_service:
+    container_name: wedding_service
+    build:
+      context: .
+      dockerfile: services/wedding_service/Dockerfile
+    restart: "no"
+    command: ["-frontend", "/app/webserver/website/frontend/out", "-hotreload", "true"]
+    depends_on:
+      mysql_service:
+        condition: service_healthy
+    expose:
+      - "${WEDDING_SERVICE_HTTP_PORT}"
+    volumes:
+      - type: bind
+        source: ./.docker/wedding_service
+        target: /data
+      - type: bind
+        source: ./services/wedding_service/webserver/website/frontend/out
+        target: /app/webserver/website/frontend/out
+    env_file:
+      - .env
+    networks:
+      - wedding-network
+
+#  tinyserver:
+#    container_name: tinyserver
+#    build:
+#      context: .
+#      dockerfile: services/tinyserver/Dockerfile
+#    restart: "no"
+#    expose:
+#      - "80"
+#    networks:
+#      - wedding-network
+
 networks:
-    wedding-network:
+  wedding-network:
+    driver: bridge
