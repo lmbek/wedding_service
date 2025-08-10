@@ -49,7 +49,7 @@ func NewApp(cfg config.Config, log logger.Logger, tracer tracer.Tracer, acme cer
 }
 
 func (a *app) init() error {
-	// Reverse proxy handler med middleware og transport
+	// Init outbound transport and middleware
 	outboundTransport := a.buildOutboundTransport()
 	newMiddleware := middleware.NewMiddleware(a.logger, a.tracer)
 
@@ -102,6 +102,18 @@ func (a *app) init() error {
 
 	// Sæt HTTPS handler nu hvor reverse proxy er klar
 	httpsServer.Handler = a.reverseProxy.Handler()
+
+	// Tilpas HTTP :80 handleren til at tillade WebSocket-upgrade anmodninger
+	// gennem reverse proxy, mens alm. HTTP stadig redirectes til HTTPS og ACME
+	// udfordringer håndteres.
+	httpServer.Handler = reverseproxy.NewHTTPRedirectOrProxyHandler(
+		a.acme,
+		func(w http.ResponseWriter, r *http.Request) {
+			target := "https://" + r.Host + r.URL.RequestURI()
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
+		},
+		a.reverseProxy.Handler(),
+	)
 
 	return nil
 }

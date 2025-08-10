@@ -1,10 +1,11 @@
 package frontend
 
 import (
-	"golang.org/x/net/websocket"
 	"io"
 	"log/slog"
 	"sync"
+
+	"golang.org/x/net/websocket"
 )
 
 var (

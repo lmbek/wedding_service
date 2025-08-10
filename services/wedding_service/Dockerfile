@@ -11,11 +11,13 @@ COPY . /app
 # Build the wedding_service binary from this module
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags dockerdev -o /out/wedding_service .
 
-FROM gcr.io/distroless/base-debian12
+# Use Alpine for the runtime image
+FROM alpine:3.20
 WORKDIR /app
+# Install CA certificates for HTTPS outbound requests, if any
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 COPY --from=builder /out/wedding_service /app/wedding_service
-# Static assets
-COPY --from=builder /app/services/wedding_service/webserver/website/frontend/out /app/webserver/website/frontend/out
+# Note: Frontend assets are mounted at runtime via docker-compose bind mount
 ENV GIN_MODE=release
 
 ENTRYPOINT ["/app/wedding_service"]

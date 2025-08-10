@@ -1,9 +1,16 @@
-<nav>
-    {{template "components/icon.gohtml" .}}
-	<menu>
-		<li>Home</li>
-		<li>Home2</li>
-		<li>Home3</li>
-		<li>Home4</li>
-	</menu>
+<nav class="site-nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">
+      <span class="logo">{{template "components/icon.gohtml" .}}</span>
+      <span>Vores Bryllup</span>
+    </a>
+    <button id="navToggle" aria-label="Åbn menu" aria-expanded="false" aria-controls="menu">☰</button>
+    <ul id="menu" class="menu" data-open="false" style="margin-left:auto;align-items:center;">
+      <li><a href="/">Forside</a></li>
+      <li><a href="/invitation/">Invitation</a></li>
+      <li><a href="/info/">Praktisk info</a></li>
+      <li><a href="/wishes/">Ønsker</a></li>
+      <li><a class="button primary" href="/rsvp/">Tilføj til kalender</a></li>
+    </ul>
+  </div>
 </nav>

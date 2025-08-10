@@ -1,1 +1,50 @@
-<h1>Invitation</h1>
+<section class="hero reveal" data-in="true">
+  <div class="container">
+    <div id="inviteCtx" data-code="{{.InviteCode}}" data-valid="{{.InviteValid}}" data-pdf="{{.InvitePDF}}"></div>
+    <div class="badge">Invitation</div>
+    <h1>Kære {{.Name}} – du er inviteret!</h1>
+    {{if not .InviteValid}}
+      <p class="sub">Skriv din invitationskode eller spørg os om den</p>
+      <form id="inviteCodeForm" class="form" style="max-width:560px;margin:10px auto 0;display:grid;grid-template-columns:1fr auto;gap:10px" novalidate>
+        <input id="inviteCodeInput" class="input" placeholder="Indtast din kode f.eks. fj4938" />
+        <button class="button primary" type="submit">Åbn</button>
+      </form>
+    {{else}}
+      <div id="inviteInfo" class="card" style="max-width:980px;margin:16px auto;">
+        <h3>Jeres invitation</h3>
+        <p>{{.Information}}</p>
+        <h4>Jeres invitation <small style="color:var(--muted)"><span id="acceptedCounter">0/0</span></small></h4>
+        <div style="overflow-x:auto;margin-bottom:10px;">
+          <table id="myInvitationTable" style="width:100%;border-collapse:separate;border-spacing:0 6px;">
+            <thead>
+              <tr style="text-align:left;color:var(--muted)">
+                <th>Navn</th>
+                <th>Status</th>
+                <th>Handling</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h4>Alle der har accepteret</h4>
+        <div style="overflow-x:auto">
+          <table id="allAcceptedTable" style="width:100%;border-collapse:separate;border-spacing:0 6px;">
+            <thead>
+              <tr style="text-align:left;color:var(--muted)">
+                <th>Navn</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin:16px auto;width:100%">
+        <h3 style="margin-top:0">Invitation PDF</h3>
+        <iframe id="invitationPdf" title="Invitation PDF" src="/invitation/qmkjfferd309ji9f3/pdf/invitation.pdf" width="100%" height="700" style="border:0;border-radius:12px;box-shadow:var(--shadow)"></iframe>
+        <div class="cta" style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+          <button id="closeInvite" class="button" type="button">Luk invitation</button>
+        </div>
+      </div>
+    {{end}}
+  </div>
+</section>

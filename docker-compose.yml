@@ -26,12 +26,16 @@ services:
       context: .
       dockerfile: services/wedding_service/Dockerfile
     restart: "no"
+    command: ["-frontend", "/app/webserver/website/frontend/out", "-hotreload", "true"]
     expose:
       - "${WEDDING_SERVICE_HTTP_PORT}"
     volumes:
       - type: bind
         source: ./.docker/wedding_service
         target: /data
+      - type: bind
+        source: ./services/wedding_service/webserver/website/frontend/out
+        target: /app/webserver/website/frontend/out
     env_file:
       - .env
     networks:

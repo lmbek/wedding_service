@@ -29,7 +29,7 @@ func startGatewayService() {
 	newTracer := tracer.NewTracer("X-Trace-Id")
 	newACME, err := certificate.NewAutoCertManager(c)
 	if err != nil {
-		slog.Error("failed to load config", slog.Any("error", err))
+		slog.Error("failed to init ACME", slog.Any("error", err))
 		return
 	}
 
