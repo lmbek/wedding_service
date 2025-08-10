@@ -1,0 +1,10 @@
+# Exclude local data volumes from Docker build context (avoid permission issues and huge contexts)
+.docker/
+
+# Version control
+.git
+
+# Local build artifacts and profiles
+bin
+coverage.out
+*.prof
