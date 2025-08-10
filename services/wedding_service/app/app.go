@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 	"wedding_service/config"
-	"wedding_service/logging"
 	"wedding_service/webserver"
 	"wedding_service/webserver/website/frontend"
 )
@@ -66,9 +65,9 @@ func NewApp(ctx context.Context) (App, error) {
 func (a *application) initialize() error {
 	var err error
 	// Initialize logging (slog)
-	if err = logging.Init("wedding_service", a.config.DebugLevel()); err != nil {
-		return err
-	}
+	//if err = logging.Init("wedding_service", a.config.DebugLevel()); err != nil {
+	//	return err
+	//}
 
 	// Initialize the frontend
 	a.frontend, err = frontend.NewFrontend(a.config.FrontendPath(), a.config.HotReloadEnabled())
@@ -116,9 +115,9 @@ func (a *application) Shutdown() error {
 	}
 
 	// Shutdown logging
-	if err := logging.Shutdown(a.ctx); err != nil {
-		slog.Error("Error shutting down logging", slog.Any("error", err))
-	}
+	//if err := logging.Shutdown(a.ctx); err != nil {
+	//	slog.Error("Error shutting down logging", slog.Any("error", err))
+	//}
 
 	return nil
 }
