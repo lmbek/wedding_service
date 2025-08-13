@@ -3,64 +3,88 @@ package webserver
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
+	"wedding_service/certificate"
 	"wedding_service/config"
 	"wedding_service/webserver/website/frontend"
 )
 
 type Webserver interface {
-	init() (Webserver, error)
 	ListenAndServe() error
 	Close() error
 }
 
 type webserver struct {
-	config     config.Config
-	frontend   frontend.Frontend
-	httpServer *http.Server
+	httpServer  *http.Server
+	httpsServer *http.Server
+	certPath    string
+	keyPath     string
 }
 
-func NewWebserver(config config.Config, frontend frontend.Frontend) (Webserver, error) {
-	w := &webserver{
-		config:   config,
-		frontend: frontend,
-	}
-	return w.init()
-}
-
-func (w *webserver) init() (Webserver, error) {
+func NewWebserver(config config.Config, frontend frontend.Frontend) (w Webserver, err error) {
 	mux := http.NewServeMux()
-	useWebsite(w.config, mux, w.frontend)
-	useApi(w.config, mux)
+	useWebsite(config, mux, frontend)
+	useApi(config, mux)
 
-	httpServer := newHttpServer(w.config.HttpPort())
-	httpServer.Handler = applyMiddleware(mux)
+	acmeManager, err := certificate.InitAcme()
+	if err != nil {
+		return nil, fmt.Errorf("could not use acme manager: %w", err)
+	}
 
-	w.httpServer = httpServer
+	httpServer := newHttpServer(config.HttpPort())
+	httpsServer, err := newHttpsServer(config.HttpsPort(), acmeManager)
+	if err != nil {
+		return nil, err
+	}
 
-	return w, nil
+	// TODO: add middleware with protect host names and logging and more to these.
+	// Maybe useMiddleware(httpsServer) and then put handle there etc.
+	httpServer.Handler = acmeManager.HTTPHandler(mux)
+	httpsServer.Handler = mux
+
+	return &webserver{
+		httpServer:  httpServer,
+		httpsServer: httpsServer,
+	}, nil
 }
 
 func (w *webserver) ListenAndServe() error {
-	slog.Info("Listening on HTTP", slog.String("url", fmt.Sprintf("http://localhost:%s", w.config.HttpPort())))
+	errChan := make(chan error, 2)
+
+	go func() {
+		errChan <- w.listenHTTPS()
+	}()
+
+	go func() {
+		errChan <- w.listenHTTP()
+	}()
+
+	return <-errChan
+}
+
+func (w *webserver) listenHTTPS() error {
+	// Listen and serve HTTPS / TLS
+	err := w.httpsServer.ListenAndServeTLS("", "")
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("HTTPS server error: %w", err)
+	}
+
+	return nil
+}
+
+func (w *webserver) listenHTTP() error {
+	// Listen and serve HTTP
 	err := w.httpServer.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("HTTP server error: %w", err)
 	}
+
 	return nil
 }
 
 func (w *webserver) Close() error {
-	return w.httpServer.Close()
-}
+	errClosingHttps := w.httpsServer.Close()
+	errClosingHttp := w.httpServer.Close()
 
-// applyMiddleware applies a chain of middleware to a handler
-// The middleware is applied in reverse order, so the first middleware in the list
-// will be the outermost middleware in the chain
-func applyMiddleware(h http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		h = middlewares[i](h)
-	}
-	return h
+	return errors.Join(errClosingHttp, errClosingHttps)
 }

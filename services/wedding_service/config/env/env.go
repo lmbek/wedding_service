@@ -1,18 +1,8 @@
 package env
 
-import (
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-)
-
 type Env interface {
-	Reset() (Env, error)
-	DebugLevel() int
 	HttpPort() string
-	CertPath() string
-	KeyPath() string
+	HttpsPort() string
 	MySQLHost() string
 	MySQLPort() string
 	MySQLUser() string
@@ -22,17 +12,14 @@ type Env interface {
 }
 
 type env struct {
-	path       string
-	debugLevel int
-	httpPort   string
-	certPath   string
-	keyPath    string
-	mysqlHost  string
-	mysqlPort  string
-	mysqlUser  string
-	mysqlPass  string
-	mysqlDB    string
-	mysqlRoot  string
+	httpPort  string
+	httpsPort string
+	mysqlHost string
+	mysqlPort string
+	mysqlUser string
+	mysqlPass string
+	mysqlDB   string
+	mysqlRoot string
 }
 
 // NewEnv reads configuration exclusively from the process environment.
@@ -43,47 +30,23 @@ type env struct {
 //   - SELF_SIGNED_CERT_PATH (defaults to "/data/certs/localhost_wedding_service.crt")
 //   - SELF_SIGNED_KEY_PATH (defaults to "/data/certs/localhost_wedding_service.key")
 func NewEnv(path string) (Env, error) {
-
-	debugStr := strings.TrimSpace(os.Getenv("DEBUG"))
-	if debugStr == "" {
-
-	}
-
-	httpPort := strings.TrimSpace(os.Getenv("WEDDING_SERVICE_HTTP_PORT"))
-	if httpPort == "" {
-
-	}
-
-	// Parse DEBUG level (must be integer)
-	lvl, err := strconv.Atoi(debugStr)
-	if err != nil {
-		return nil, fmt.Errorf("DEBUG must be an integer, got %q: %w", debugStr, err)
-	}
-
 	e := &env{
-		path:       path, // kept for Reset() compatibility; not used for file loading
-		debugLevel: lvl,
-		httpPort:   httpPort,
-		certPath:   os.Getenv("SELF_SIGNED_CERT_PATH"),
-		keyPath:    os.Getenv("SELF_SIGNED_KEY_PATH"),
-		mysqlHost:  os.Getenv("MYSQL_HOST"),
-		mysqlPort:  os.Getenv("MYSQL_PORT"),
-		mysqlUser:  os.Getenv("MYSQL_USER"),
-		mysqlPass:  os.Getenv("MYSQL_PASSWORD"),
-		mysqlDB:    os.Getenv("MYSQL_DATABASE"),
-		mysqlRoot:  os.Getenv("MYSQL_ROOT_PASSWORD"),
+		httpPort:  "80",
+		httpsPort: "443",
+		//certPath:   os.Getenv("SELF_SIGNED_CERT_PATH"),
+		//keyPath:    os.Getenv("SELF_SIGNED_KEY_PATH"),
+		mysqlHost: "localhost",
+		mysqlPort: "3306",
+		mysqlUser: "lmbek",
+		mysqlPass: "kp-o34-Aa,e4.FW/EfeKLA2Rt,mfk",
+		mysqlDB:   "wedding_db",
+		mysqlRoot: "kp-o,e4.g434erw,.-FW/EfwdweK34-AaLA2Rt02912la,mfk",
 	}
 	return e, nil
 }
 
-func (e *env) Reset() (Env, error) {
-	return NewEnv(e.path)
-}
-
-func (e *env) DebugLevel() int           { return e.debugLevel }
 func (e *env) HttpPort() string          { return e.httpPort }
-func (e *env) CertPath() string          { return e.certPath }
-func (e *env) KeyPath() string           { return e.keyPath }
+func (e *env) HttpsPort() string         { return e.httpsPort }
 func (e *env) MySQLHost() string         { return e.mysqlHost }
 func (e *env) MySQLPort() string         { return e.mysqlPort }
 func (e *env) MySQLUser() string         { return e.mysqlUser }
