@@ -14,6 +14,11 @@ coverage.out
 *.out
 wedding-go-service
 *.pdf
+inserts.sql
+*.sql
+mysql_service.tar
+wedding_service
+
 
 /src/webserver/website/frontend/out/public/api/swagger/docs.go
 /src/webserver/website/frontend/out/public/api/swagger/swagger.json

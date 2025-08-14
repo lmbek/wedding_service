@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"wedding_service/certificate"
 	"wedding_service/config"
+	"wedding_service/webserver/middleware"
 	"wedding_service/webserver/website/frontend"
 )
 
@@ -39,7 +40,7 @@ func NewWebserver(config config.Config, frontend frontend.Frontend) (w Webserver
 
 	// TODO: add middleware with protect host names and logging and more to these.
 	// Maybe useMiddleware(httpsServer) and then put handle there etc.
-	httpServer.Handler = acmeManager.HTTPHandler(mux)
+	httpServer.Handler = acmeManager.HTTPHandler(middleware.RedirectToHTTPS())
 	httpsServer.Handler = mux
 
 	return &webserver{
