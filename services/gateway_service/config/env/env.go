@@ -34,11 +34,11 @@ func NewEnv() (Env, error) {
 	if err != nil {
 		return nil, err
 	}
-	certPath, err = required("CERT_PATH")
+	certPath = "CERT_PATH"
 	if err != nil {
 		return nil, err
 	}
-	keyPath, err = required("KEY_PATH")
+	keyPath = "KEY_PATH"
 	if err != nil {
 		return nil, err
 	}

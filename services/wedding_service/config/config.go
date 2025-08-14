@@ -44,20 +44,12 @@ func (c *config) HotReloadEnabled() bool {
 
 // Env
 
-func (c *config) DebugLevel() int {
-	return c.env.DebugLevel()
-}
-
 func (c *config) HttpPort() string {
 	return c.env.HttpPort()
 }
 
-func (c *config) CertPath() string {
-	return c.env.CertPath()
-}
-
-func (c *config) KeyPath() string {
-	return c.env.KeyPath()
+func (c *config) HttpsPort() string {
+	return c.env.HttpsPort()
 }
 
 func (c *config) MySQLHost() string         { return c.env.MySQLHost() }
@@ -66,7 +58,3 @@ func (c *config) MySQLUser() string         { return c.env.MySQLUser() }
 func (c *config) MySQLPassword() string     { return c.env.MySQLPassword() }
 func (c *config) MySQLDatabase() string     { return c.env.MySQLDatabase() }
 func (c *config) MySQLRootPassword() string { return c.env.MySQLRootPassword() }
-
-func (c *config) Reset() (env.Env, error) {
-	return c.env.Reset()
-}

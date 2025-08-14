@@ -10,12 +10,13 @@ import (
 )
 
 type HTTPSServer struct {
-	Port            string
-	SelfSignedCert  string
-	SelfSignedKey   string
-	ACME            certificate.AutoCertManager
-	Handler         http.Handler
-	PreferHTTP2Only bool // true => NextProtos: ["h2"]
+	Port string
+	// SelfSignedCert og SelfSignedKey ignoreres i prod-only opsætning
+	SelfSignedCert string
+	SelfSignedKey  string
+	ACME           certificate.AutoCertManager
+	Handler        http.Handler
+	//PreferHTTP2Only bool // true => NextProtos: ["h2"]
 }
 
 func NewHTTPSServer(server HTTPSServer) (*http.Server, error) {
@@ -25,12 +26,15 @@ func NewHTTPSServer(server HTTPSServer) (*http.Server, error) {
 	if server.Handler == nil {
 		server.Handler = http.DefaultServeMux
 	}
+	if server.ACME == nil {
+		return nil, fmt.Errorf("ACME manager is required for production certificates")
+	}
 
 	srv := &http.Server{
 		Addr:    ":" + server.Port,
 		Handler: server.Handler,
 		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
+			MinVersion: tls.VersionTLS12,
 		},
 		ReadTimeout:       15 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
@@ -39,30 +43,12 @@ func NewHTTPSServer(server HTTPSServer) (*http.Server, error) {
 		MaxHeaderBytes:    1 << 20,
 	}
 
-	// HTTP/2 enforcement hvis ønsket
-	if server.PreferHTTP2Only {
-		srv.TLSConfig.NextProtos = []string{"h2"}
-	} else {
-		srv.TLSConfig.NextProtos = []string{"h2", "http/1.1"}
-	}
+	srv.TLSConfig.NextProtos = []string{"h2", "http/1.1"}
 
-	// Prefer self-signed in local/dev when provided; otherwise fall back to ACME manager
-	if server.SelfSignedCert != "" && server.SelfSignedKey != "" {
-		if server.ACME != nil {
-			cert, err := server.ACME.LoadSelfSigned(server.SelfSignedCert, server.SelfSignedKey)
-			if err != nil {
-				return nil, fmt.Errorf("load self-signed: %w", err)
-			}
-			srv.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-				return cert, nil
-			}
-		}
-	} else if server.ACME != nil {
-		// Use real certificates managed by ACME when no self-signed is specified
-		getCert := server.ACME.GetCertificate
-		srv.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			return getCert(chi)
-		}
+	// Prod-only: altid brug ACME-certifikater
+	getCert := server.ACME.GetCertificate
+	srv.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+		return getCert(chi)
 	}
 
 	return srv, nil

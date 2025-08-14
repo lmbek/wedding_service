@@ -1,16 +1,33 @@
 package main
 
 import (
-	"log/slog"
-	"wedding_service/app"
+	"log"
+	"wedding_service/config"
+	"wedding_service/webserver"
+	"wedding_service/webserver/website/frontend"
 )
 
 func main() {
 
-	a, err := app.NewApp()
+	c, err := config.NewConfig()
 	if err != nil {
-		slog.Error("failed to init app", slog.Any("error", err))
-		return
+		log.Println(err)
 	}
-	_ = a.Start()
+
+	// Initialize the frontend
+	f, err := frontend.NewFrontend(c.FrontendPath(), c.HotReloadEnabled())
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Initialize the webserver
+	w, err := webserver.NewWebserver(c, f)
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = w.ListenAndServe()
+	if err != nil {
+		log.Println(err)
+	}
 }

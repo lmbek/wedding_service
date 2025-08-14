@@ -18,7 +18,8 @@
     {{else}}
         <h1 style="font-size: 2rem;">Kære {{.Name}} – Du/I er inviteret!</h1>
       <div id="inviteInfo" class="card" style="max-width:980px;margin:16px auto;">
-        <h3>Jeres invitation</h3>
+            <h2>Vi holder bryllup den 20 September 2025 fra klokken 13</h2>
+          <h3>Jeres invitation</h3>
         <p>{{.Information}}</p>
         <h4>Jeres invitation <small style="color:var(--muted)"><span id="acceptedCounter">0/0</span></small></h4>
         <div style="overflow-x:auto;margin-bottom:10px;">
@@ -54,15 +55,19 @@
       <div class="card" style="margin:16px auto;width:100%">
         <h3 style="margin-top:0">Invitation PDF</h3>
         <iframe id="invitationPdf" title="Invitation PDF" src="/bryllup/invitation/qmkjfferd309ji9f3/pdf/invitation.pdf" width="100%" height="700" style="border:0;border-radius:12px;box-shadow:var(--shadow)"></iframe>
-          <p>OBS: PDF er forkert vedr. bryllupsfest tidspunkt, læs tidsplan nederst</p>
           <div class="cta" style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
             <button id="closeInvite" class="button" type="button">Luk invitation</button>
-        </div>
+              <a
+                      class="button"
+                      href="/bryllup/invitation/qmkjfferd309ji9f3/pdf/invitation.pdf"
+                      download="invitation.pdf"
+                      rel="noopener"
+              >Download PDF</a>
+          </div>
+          <p>Svar venligst på invitationen senest den 31 august 2025</p>
       </div>
         <div class="card" style="margin:16px auto;width:100%">
-            <h3 style="margin-top:0">Tidsplan (opdateres senere)</h3>
-
-            <h4>Lørdag</h4>
+            <h3 style="margin-top:0">Tidsplan (opdateres 1 uge før)</h3>
             <table class="table">
                 <tbody>
                 <tr>
@@ -74,16 +79,16 @@
                     <td>Transport til feststed</td>
                 </tr>
                 <tr>
-                    <td>14:00–15:00</td>
+                    <td>14:00–15:30</td>
                     <td>Reception</td>
                 </tr>
                 <tr>
-                    <td>15:00–18:30</td>
+                    <td>15:30–18:30</td>
                     <td>Bryllupsmiddag</td>
                 </tr>
                 <tr>
                     <td>18:30–21:30</td>
-                    <td>Dessert, kage, brudevals, dans</td>
+                    <td>Dessert, brudevals, dans og andet</td>
                 </tr>
                 <tr>
                     <td>21:30–21:45</td>

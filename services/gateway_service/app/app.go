@@ -71,7 +71,7 @@ func (a *app) init() error {
 		SelfSignedKey:  a.config.KeyPath(),
 		ACME:           a.acme,
 		// Handler is set later with a.reverseProxy.Handler()
-		PreferHTTP2Only: true,
+		//PreferHTTP2Only: true,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build HTTPS server: %w", err)
@@ -175,9 +175,9 @@ func (a *app) Shutdown(ctx context.Context) error {
 
 func (a *app) buildOutboundTransport() http.RoundTripper {
 	base := &http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
-		DialContext:         (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
-		ForceAttemptHTTP2:   true,
+		Proxy:       http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		//ForceAttemptHTTP2:   true,
 		MaxIdleConns:        200,
 		IdleConnTimeout:     90 * time.Second,
 		TLSHandshakeTimeout: 10 * time.Second,
