@@ -435,6 +435,13 @@ footer {
     border-radius: 50%;
 }
 
+/* Light blue variant */
+.heart[data-variant="blue"],
+.heart[data-variant="blue"]::before,
+.heart[data-variant="blue"]::after {
+    background: #6ec1ff; /* light blue */
+}
+
 .heart::before {
     left: -7px;
 }

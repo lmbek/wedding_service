@@ -53,10 +53,11 @@
   // Hearts
   const MAX_HEARTS = 60;
   let heartCount = 0;
-  function spawnHeart(x, y){
+  function spawnHeart(x, y, variant){
     if (heartCount > MAX_HEARTS) return;
     const h = document.createElement('div');
     h.className = 'heart';
+    if (variant === 'blue') h.setAttribute('data-variant','blue');
     h.style.left = (x - 7) + 'px';
     h.style.top = (y - 7) + 'px';
     h.style.transform += ` translateX(${(Math.random()*40-20)}px)`;
@@ -66,14 +67,15 @@
   }
   function burstHeartsAt(el){
     const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width/2 + window.scrollX;
-    const cy = rect.top + rect.height/2 + window.scrollY;
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
     for (let i=0;i<12;i++) setTimeout(()=>spawnHeart(cx + (Math.random()*60-30), cy + (Math.random()*20-10)), i*60);
   }
 
   function enableAmbientHearts(){
     document.addEventListener('click', (e)=>{
-      spawnHeart(e.pageX, e.pageY);
+      // Use viewport-relative coordinates for fixed-position hearts
+      spawnHeart(e.clientX, e.clientY);
     });
   }
 
@@ -350,12 +352,21 @@
     }
   }
 
+  function enableBlueHeartTimer(){
+    setInterval(()=>{
+      const x = 20 + Math.random() * Math.max(0, window.innerWidth - 40);
+      const y = 20 + Math.random() * Math.max(0, window.innerHeight - 40);
+      spawnHeart(x, y, 'blue');
+    }, 5000);
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     setYear();
     smoothAnchors();
     navToggle();
     revealOnScroll();
     enableAmbientHearts();
+    enableBlueHeartTimer();
     handleRSVP();
     inviteCard();
     setupInvitationPage();
