@@ -133,7 +133,8 @@ nav .nav-inner {
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        border: 1px solid rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.75);
+        font-size: 1.5rem;
         background: var(--surface);
         box-shadow: var(--shadow);
     }
